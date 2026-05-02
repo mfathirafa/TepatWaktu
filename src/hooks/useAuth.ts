@@ -47,13 +47,13 @@ export function useAuth() {
 
         if (error) {
           console.error('Error fetching user role:', error);
-          if (mounted) setAuthState({ user, session, role: 'customer', loading: false }); // Fallback
+          if (mounted) setAuthState({ user, session, role: 'customer', loading: false });
         } else {
           if (mounted) setAuthState({ user, session, role: data?.role || 'customer', loading: false });
         }
       } catch (error) {
         console.error('Error in fetchRole:', error);
-        if (mounted) setAuthState({ user, session, role: 'customer', loading: false }); // Fallback
+        if (mounted) setAuthState({ user, session, role: 'customer', loading: false });
       }
     }
 
@@ -76,13 +76,25 @@ export function useAuth() {
   }, []);
 
   const signIn = supabase.auth.signInWithPassword.bind(supabase.auth);
-  const signUp = supabase.auth.signUp.bind(supabase.auth);
+  
+  const customSignUp = async (email: string, password: string, fullName: string) => {
+    return await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        }
+      }
+    });
+  };
+
   const signOut = supabase.auth.signOut.bind(supabase.auth);
 
   return {
     ...authState,
     signIn,
-    signUp,
+    signUp: customSignUp,
     signOut,
   };
 }
