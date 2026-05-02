@@ -1,0 +1,1 @@
+export default function ResalePage() { return <div className='p-4'><h1 className='text-2xl font-bold'>ResalePage</h1></div>; }
