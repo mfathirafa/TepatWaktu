@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { formatDate, getWarrantyStatus } from '../lib/utils';
 
 interface Profile {
   id: string;
@@ -33,49 +32,77 @@ export default function ProfilePage() {
       
       try {
         setIsLoading(true);
+        setError('');
         
-        // 1. Ambil Profil
+        // 1. Ambil Profil (menggunakan maybeSingle untuk mencegah error jika data belum ada)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, name, email, role, subscription_tier, created_at')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError) throw profileError;
-        setProfile(profileData as Profile);
-        setEditName(profileData.name || '');
+        let currentProfile: Profile;
 
-        // 2. Ambil Statistik Aset & Garansi
-        const { data: assetsData, error: assetsError } = await supabase
+        if (profileError || !profileData) {
+          // Fallback ke auth.user jika terjadi error atau data kosong
+          currentProfile = {
+            id: user.id,
+            name: user.user_metadata?.full_name || '',
+            email: user.email || '',
+            role: 'customer',
+            subscription_tier: 'free',
+            created_at: user.created_at || new Date().toISOString()
+          };
+        } else {
+          currentProfile = profileData as Profile;
+        }
+
+        setProfile(currentProfile);
+        setEditName(currentProfile.name || '');
+
+        // 2. Ambil Statistik Aset & Garansi (Logika Identik DashboardPage)
+        const { data: assetsData } = await supabase
           .from('assets')
-          .select(`
-            id,
-            warranties ( expiry_date, status )
-          `)
+          .select('id')
           .eq('user_id', user.id);
 
-        if (assetsError) throw assetsError;
+        const assetIds = assetsData?.map(a => a.id) || [];
+        const totalAssets = assetIds.length;
 
-        let active = 0;
-        let expired = 0;
+        let activeCount = 0;
+        let expiredCount = 0;
 
-        (assetsData || []).forEach((asset: any) => {
-          if (asset.warranties && asset.warranties.length > 0) {
-            const status = getWarrantyStatus(asset.warranties[0].expiry_date);
-            if (status === 'active' || status === 'expiring') active++;
-            else if (status === 'expired') expired++;
-          }
-        });
+        if (assetIds.length > 0) {
+          const { data: warrantiesData } = await supabase
+            .from('warranties')
+            .select('status, expiry_date')
+            .in('asset_id', assetIds);
+
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          activeCount = warrantiesData?.filter(w => {
+            const expDate = new Date(w.expiry_date);
+            expDate.setHours(0, 0, 0, 0);
+            return expDate >= today;
+          }).length || 0;
+
+          expiredCount = warrantiesData?.filter(w => {
+            const expDate = new Date(w.expiry_date);
+            expDate.setHours(0, 0, 0, 0);
+            return expDate < today;
+          }).length || 0;
+        }
 
         setStats({
-          total: assetsData?.length || 0,
-          active,
-          expired
+          total: totalAssets,
+          active: activeCount,
+          expired: expiredCount
         });
 
       } catch (err: any) {
         console.error('Error fetching profile:', err);
-        setError('Gagal memuat profil.');
+        setError('Gagal memuat profil secara lengkap. Beberapa data mungkin tidak akurat.');
       } finally {
         setIsLoading(false);
       }
@@ -95,8 +122,14 @@ export default function ProfilePage() {
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ name: editName })
-        .eq('id', user.id);
+        .upsert({ 
+          id: user.id, 
+          name: editName,
+          email: profile.email,
+          role: profile.role,
+          subscription_tier: profile.subscription_tier,
+          created_at: profile.created_at
+        });
 
       if (updateError) throw updateError;
 
@@ -122,9 +155,22 @@ export default function ProfilePage() {
     navigate('/login');
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  // Avatar Inisial
+  const getInitials = (name: string, email: string) => {
+    if (!name || name.trim() === '') {
+      return email ? email.substring(0, 1).toUpperCase() : 'U';
+    }
+    const parts = name.trim().split(' ').filter(n => n.length > 0);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  };
+
+  // Format Bergabung Sejak
+  const formatJoinDate = (dateString: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   };
 
   if (isLoading) {
@@ -137,6 +183,11 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  // Tampilkan nama atau fallback ke email
+  const displayName = profile?.name && profile.name.trim() !== '' 
+    ? profile.name 
+    : (user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pengguna');
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 md:pb-0">
@@ -155,8 +206,16 @@ export default function ProfilePage() {
                 <Link to="/profile" className="text-indigo-600 font-semibold border-b-2 border-indigo-600 px-1 py-5">Profil</Link>
               </nav>
             </div>
-            <div className="hidden sm:block text-sm font-medium text-slate-700">
-              Halo, {profile?.name || user?.email?.split('@')[0]}
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:block text-sm font-medium text-slate-700">
+                Halo, {displayName}
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="text-sm font-medium text-slate-500 hover:text-rose-600 transition-colors px-3 py-2 rounded-lg hover:bg-rose-50 hidden sm:block"
+              >
+                Keluar
+              </button>
             </div>
           </div>
         </div>
@@ -178,12 +237,12 @@ export default function ProfilePage() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl opacity-50 -mr-10 -mt-10 pointer-events-none"></div>
               
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl font-bold text-white shadow-lg shrink-0">
-                {getInitials(profile?.name || '')}
+                {getInitials(profile?.name || user?.user_metadata?.full_name || '', profile?.email || user?.email || '')}
               </div>
               
               <div className="flex-1 text-center sm:text-left z-10">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-extrabold text-slate-900">{profile?.name}</h2>
+                  <h2 className="text-2xl font-extrabold text-slate-900">{displayName}</h2>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold w-max mx-auto sm:mx-0 ${
                     profile?.subscription_tier === 'pro' 
                       ? 'bg-gradient-to-r from-amber-200 to-yellow-400 text-amber-900 shadow-sm' 
@@ -192,9 +251,9 @@ export default function ProfilePage() {
                     {profile?.subscription_tier === 'pro' ? '★ PRO MEMBER' : 'FREE PLAN'}
                   </span>
                 </div>
-                <p className="text-slate-500 font-medium mb-4">{profile?.email}</p>
+                <p className="text-slate-500 font-medium mb-4">{profile?.email || user?.email}</p>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Bergabung sejak {profile?.created_at ? formatDate(profile.created_at) : '-'}
+                  Bergabung sejak {formatJoinDate(profile?.created_at || user?.created_at || '')}
                 </p>
               </div>
             </div>
@@ -248,7 +307,7 @@ export default function ProfilePage() {
                   <input 
                     type="email" 
                     disabled
-                    value={profile?.email || ''}
+                    value={profile?.email || user?.email || ''}
                     className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed opacity-70"
                   />
                   <p className="text-xs text-slate-400 mt-1">Email digunakan untuk login dan tidak dapat diubah.</p>
@@ -303,15 +362,11 @@ export default function ProfilePage() {
                 <div className="space-y-4 mb-10">
                   <div className="flex items-start gap-3">
                     <span className="text-emerald-400 mt-0.5">✓</span>
-                    <p className="text-sm text-indigo-50">Kapasitas hingga 50 aset</p>
+                    <p className="text-sm text-indigo-50">Kapasitas hingga 3 aset</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <span className="text-emerald-400 mt-0.5">✓</span>
                     <p className="text-sm text-indigo-50">Pengingat garansi via Email</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-emerald-400 mt-0.5">✓</span>
-                    <p className="text-sm text-indigo-50">Sertifikat Jual Digital</p>
                   </div>
                   {profile?.subscription_tier !== 'pro' && (
                     <div className="flex items-start gap-3 opacity-50">
