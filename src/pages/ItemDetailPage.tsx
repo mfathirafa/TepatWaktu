@@ -371,14 +371,7 @@ export default function ItemDetailPage() {
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 relative z-10">
-                  <Link 
-                    to={`/resale/${asset.id}`}
-                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>🤝</span> Buat Sertifikat Jual Kembali
-                  </Link>
-                </div>
+
               </div>
             ) : (
               <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200 text-center">
