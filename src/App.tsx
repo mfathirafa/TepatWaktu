@@ -1,116 +1,76 @@
-import type { ReactNode } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import MobileWrapper from './components/MobileWrapper';
+import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './context/AuthContext';
 
-// Pages
-import LandingPage from './pages/LandingPage';
+// Standalone pages (no mobile shell)
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
-import ScanPage from './pages/ScanPage';
-import WarrantyPage from './pages/WarrantyPage';
-import ItemDetailPage from './pages/ItemDetailPage';
-import NotificationsPage from './pages/NotificationsPage';
-import ResalePage from './pages/ResalePage';
-import VerifyPage from './pages/VerifyPage';
-import ProfilePage from './pages/ProfilePage';
-import AdminPage from './pages/AdminPage';
+import Register from './pages/Register';
+import UpgradePremium from './pages/UpgradePremium';
+import PaymentConfirmation from './pages/PaymentConfirmation';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
 
-interface ProtectedRouteProps {
-  children: ReactNode;
-}
+// Mobile-wrapped protected pages
+import Dashboard from './pages/Dashboard';
+import ManageBills from './pages/ManageBills';
+import ManageTax from './pages/ManageTax';
+import ManageService from './pages/ManageService';
+import ManageWarranty from './pages/ManageWarranty';
+import DocumentCenter from './pages/DocumentCenter';
+import ActivityHistory from './pages/ActivityHistory';
+import SettingsPage from './pages/SettingsPage';
+import Notifications from './pages/Notifications';
+import ReminderDetail from './pages/ReminderDetail';
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+function App() {
   const { user, loading } = useAuth();
-  const location = useLocation();
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-300">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          <p className="text-slate-600 text-sm font-medium">Memuat Ingetin...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-};
-
-const AdminRoute = ({ children }: ProtectedRouteProps) => {
-  const { user, role, loading } = useAuth();
-  const location = useLocation();
-
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-export default function App() {
   return (
-    <Router>
+    <MobileWrapper>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/verify/:id" element={<VerifyPage />} />
+        {/* Public pages */}
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+        <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+        {/* Protected pages */}
+        <Route path="/*" element={
+          <ProtectedRoute>
+            <Routes>
+              {/* Premium & Payment Flow */}
+              <Route path="/upgrade" element={<UpgradePremium />} />
+              <Route path="/konfirmasi-pembayaran" element={<PaymentConfirmation />} />
+              <Route path="/pembayaran-berhasil" element={<PaymentSuccess />} />
+              <Route path="/pembayaran-gagal" element={<PaymentFailed />} />
 
-        {/* Protected Customer Routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <DashboardPage />
+              {/* Core Features */}
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/tagihan" element={<ManageBills />} />
+              <Route path="/tagihan/detail" element={<ReminderDetail />} />
+              <Route path="/pajak" element={<ManageTax />} />
+              <Route path="/servis" element={<ManageService />} />
+              <Route path="/garansi" element={<ManageWarranty />} />
+              <Route path="/dokumen" element={<DocumentCenter />} />
+              <Route path="/riwayat" element={<ActivityHistory />} />
+              <Route path="/notifikasi" element={<Notifications />} />
+              <Route path="/pengaturan" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </ProtectedRoute>
         } />
-        <Route path="/scan" element={
-          <ProtectedRoute>
-            <ScanPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/assets/:id" element={
-          <ProtectedRoute>
-            <ItemDetailPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/warranties" element={
-          <ProtectedRoute>
-            <WarrantyPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/notifications" element={
-          <ProtectedRoute>
-            <NotificationsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/resale/:id" element={
-          <ProtectedRoute>
-            <ResalePage />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        } />
-
-        {/* Protected Admin Routes */}
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AdminPage />
-          </AdminRoute>
-        } />
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+    </MobileWrapper>
   );
 }
+
+export default App;

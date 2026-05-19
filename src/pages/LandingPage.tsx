@@ -2,22 +2,38 @@ import { Link } from 'react-router-dom';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-[#F5F5F5] font-sans text-slate-900">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
+            {/* Logo */}
             <div className="flex items-center">
-              <Link to="/" className="text-2xl font-extrabold text-indigo-700 flex items-center gap-2">
-                <span className="text-3xl">📦</span> ResiKu
+              <Link to="/" className="text-2xl font-extrabold text-indigo-800 tracking-tight">
+                ResiKu
               </Link>
             </div>
-            <div className="flex items-center gap-6">
-              <Link to="/login" className="text-slate-600 hover:text-indigo-700 font-semibold transition-colors">
+            
+            {/* Menu Center */}
+            <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
+              <Link to="/" className="text-indigo-700 border-b-2 border-indigo-700 py-7">
+                Beranda
+              </Link>
+              <Link to="/scan" className="hover:text-indigo-700 py-7 transition-colors">
+                Pindai Struk
+              </Link>
+              <Link to="/warranties" className="hover:text-indigo-700 py-7 transition-colors">
+                Garansi
+              </Link>
+            </nav>
+
+            {/* Actions Right */}
+            <div className="flex items-center gap-4">
+              <Link to="/login" className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2.5 rounded-full text-sm font-bold transition-colors">
                 Masuk
               </Link>
-              <Link to="/register" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-full font-semibold transition-all shadow-md hover:shadow-lg">
-                Daftar
+              <Link to="/register" className="bg-[#1D4ED8] hover:bg-blue-800 text-white px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-wider transition-colors shadow-sm">
+                DAFTAR
               </Link>
             </div>
           </div>
@@ -26,32 +42,73 @@ export default function LandingPage() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative pt-24 pb-32 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 text-sm font-bold mb-8 border border-indigo-100 shadow-sm">
-              ✨ Kurator Digital Anda
-            </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-tight mb-8">
-              Simpan Struk, Pantau Garansi, <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">
-                Jual dengan Aman
-              </span>
-            </h1>
-            <p className="mt-4 text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto mb-12">
-              ResiKu adalah brankas digital untuk semua aset dan garansi kamu. Ubah tumpukan struk kertas menjadi galeri digital yang aman dan rapi.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-indigo-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                Mulai Gratis <span>→</span>
-              </Link>
-              <Link to="/dashboard" className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full font-bold text-lg shadow-sm transition-all flex items-center justify-center gap-2">
-                <span>▶️</span> Lihat Demo
-              </Link>
+        <section className="relative pt-20 pb-32 overflow-hidden bg-[#F5F5F5]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              
+              {/* Kiri: Teks */}
+              <div className="text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100/60 text-emerald-600 text-xs font-bold uppercase tracking-widest mb-6">
+                  <span className="text-emerald-500">✦</span> KURATOR DIGITAL ANDA
+                </div>
+                <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] mb-6">
+                  Brankas digital untuk <span className="text-[#1D4ED8]">struk</span> dan garansi.
+                </h1>
+                <p className="text-lg text-slate-600 mb-10 max-w-lg leading-relaxed">
+                  Ubah tumpukan struk kertas Anda menjadi galeri digital yang mewah. Pindai, lacak, dan lindungi pembelian Anda dengan ResiKu.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-[#1D4ED8] hover:bg-blue-800 text-white rounded-full font-bold text-sm uppercase tracking-wider shadow-lg hover:shadow-blue-600/30 transition-all flex items-center justify-center gap-2">
+                    MULAI SEKARANG <span>→</span>
+                  </Link>
+                  <Link to="/#cara-kerja" className="w-full sm:w-auto px-6 py-4 text-slate-700 hover:text-slate-900 rounded-full font-bold text-sm transition-all flex items-center justify-center gap-2">
+                    <span className="text-lg leading-none border-2 border-slate-700 rounded-full w-5 h-5 flex items-center justify-center text-[10px]">▶</span> Lihat Cara Kerjanya
+                  </Link>
+                </div>
+              </div>
+
+              {/* Kanan: Mockup / Ilustrasi */}
+              <div className="relative mt-12 md:mt-0">
+                <div className="bg-white p-3 rounded-[2rem] shadow-2xl relative">
+                  <div className="bg-gradient-to-br from-red-900 to-red-800 w-full aspect-[4/3] rounded-[1.5rem] relative overflow-hidden flex items-center justify-center border-2 border-slate-900">
+                    {/* Abstrak Frame di belakang */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-8 border-red-700/50 rounded-2xl z-0"></div>
+                    
+                    {/* Placeholder Struk */}
+                    <div className="w-32 h-48 bg-white shadow-2xl transform rotate-3 flex flex-col p-3 rounded-sm border border-slate-200 z-10 relative">
+                       {/* Edge Struk bergigi */}
+                       <div className="absolute -top-1 left-0 w-full h-2 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjQiPjxwb2x5Z29uIHBvaW50cz0iMCwwIDQsNCA4LDAiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]"></div>
+                       
+                       <div className="w-full h-2 bg-slate-200 mb-2 rounded mt-2"></div>
+                       <div className="w-2/3 h-2 bg-slate-200 mb-4 rounded"></div>
+                       <div className="border-b-2 border-dashed border-slate-300 mb-4"></div>
+                       <div className="w-full flex justify-between mb-2"><div className="w-10 h-1 bg-slate-200"></div><div className="w-6 h-1 bg-slate-300"></div></div>
+                       <div className="w-full flex justify-between mb-2"><div className="w-12 h-1 bg-slate-200"></div><div className="w-8 h-1 bg-slate-300"></div></div>
+                       <div className="w-full flex justify-between mb-4"><div className="w-8 h-1 bg-slate-200"></div><div className="w-10 h-1 bg-slate-300"></div></div>
+                       <div className="mt-auto border-t-2 border-slate-800 pt-2 flex justify-between"><div className="w-8 h-1.5 bg-slate-800"></div><div className="w-10 h-1.5 bg-slate-800"></div></div>
+                    </div>
+                    
+                    {/* Ilustrasi Tangan (Abstrak) */}
+                    <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-slate-900 rounded-tr-[4rem] z-20 flex items-start justify-end rotate-12">
+                      <div className="w-16 h-24 bg-amber-200 rounded-t-full -mt-4 mr-8 -rotate-12 border-2 border-slate-900"></div>
+                    </div>
+                  </div>
+
+                  {/* Floating AI Badge */}
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[90%] bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-slate-100 flex items-center gap-4 z-30">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">VERIFIKASI AI</p>
+                      <p className="font-bold text-slate-800 text-sm">Struk Berhasil Diproses</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
-          
-          {/* Decorative Background Elements */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-100 rounded-full blur-3xl opacity-50 -z-10 pointer-events-none"></div>
         </section>
 
         {/* Features Section */}
