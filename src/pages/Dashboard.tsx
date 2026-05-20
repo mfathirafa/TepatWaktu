@@ -1,12 +1,33 @@
 import { useBills } from '../hooks/useBills';
 import { useLegalDocs } from '../hooks/useLegalDocs';
 import { useServices } from '../hooks/useServices';
-
 import { useAuth } from '../context/AuthContext';
-import { Bell, ArrowRight, Zap, CreditCard, ShieldAlert, Receipt } from 'lucide-react';
+import { Bell, ChevronRight, Shield, Receipt, FileText, Wrench, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { formatCurrency, formatDate, getDaysLeft } from '../types';
 import { useNotifications } from '../hooks/useNotifications';
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+}
+
+function getDaysLeft(dateStr: string) {
+  if (!dateStr) return 999;
+  const diff = new Date(dateStr).getTime() - new Date().setHours(0,0,0,0);
+  return Math.ceil(diff / 86400000);
+}
+
+function formatDate(dateStr: string) {
+  if (!dateStr) return '-';
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(dateStr));
+}
+
+function DaysChip({ days }: { days: number }) {
+  if (days < 0) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">Terlambat</span>;
+  if (days === 0) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">Hari Ini</span>;
+  if (days <= 3) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600">{days} Hari</span>;
+  if (days <= 7) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-600">{days} Hari</span>;
+  return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600">{days} Hari</span>;
+}
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -15,122 +36,150 @@ export default function Dashboard() {
   const { services } = useServices();
   const { unreadCount } = useNotifications();
 
-  // Combine all urgent items
-  const urgentBills = bills.filter(b => b.status === 'unpaid' && getDaysLeft(b.due_date) <= 7);
-  const urgentDocs = docs.filter(d => getDaysLeft(d.expiry_date) <= 7);
+  const unpaidBills = bills.filter(b => b.status === 'unpaid');
+  const urgentBills = unpaidBills.filter(b => getDaysLeft(b.due_date) <= 7);
+  const urgentDocs = docs.filter(d => getDaysLeft(d.expiry_date) <= 30);
   const urgentServices = services.filter(s => getDaysLeft(s.next_service_date) <= 7);
-
   const totalUrgent = urgentBills.length + urgentDocs.length + urgentServices.length;
-  const totalBillAmount = bills.filter(b => b.status === 'unpaid').reduce((s, b) => s + (b.amount ?? 0), 0);
+  const totalBillAmount = unpaidBills.reduce((s, b) => s + (b.amount ?? 0), 0);
+
+  const allUpcoming = [
+    ...urgentBills.map(b => ({ id: b.id, title: b.name, sub: 'Tagihan', date: b.due_date, days: getDaysLeft(b.due_date), color: 'text-indigo-600', bg: 'bg-indigo-50', icon: <Receipt size={16} /> })),
+    ...urgentDocs.map(d => ({ id: d.id, title: d.name, sub: 'Pajak & Legal', date: d.expiry_date, days: getDaysLeft(d.expiry_date), color: 'text-violet-600', bg: 'bg-violet-50', icon: <FileText size={16} /> })),
+    ...urgentServices.map(s => ({ id: s.id, title: s.name, sub: 'Servis', date: s.next_service_date, days: getDaysLeft(s.next_service_date), color: 'text-blue-600', bg: 'bg-blue-50', icon: <Wrench size={16} /> })),
+  ].sort((a, b) => a.days - b.days).slice(0, 5);
+
+  const firstName = profile?.name?.split(' ')[0] ?? 'Pengguna';
+
+  const stats = [
+    { label: 'Total Tagihan', value: bills.length + docs.length, color: 'bg-indigo-600', textColor: 'text-white' },
+    { label: 'Aktif', value: unpaidBills.length + docs.filter(d => getDaysLeft(d.expiry_date) > 0).length, color: 'bg-white', textColor: 'text-indigo-700', border: true },
+    { label: 'Mendesak', value: totalUrgent, color: 'bg-white', textColor: 'text-red-600', border: true },
+    { label: 'Selesai', value: bills.filter(b => b.status === 'paid').length, color: 'bg-white', textColor: 'text-emerald-600', border: true },
+  ];
 
   return (
-    <div className="min-h-full bg-slate-50/50 pb-24 relative overflow-y-auto no-scrollbar">
-      {/* Decorative BG Blob */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-indigo-600/10 rounded-full blur-3xl -z-10 pointer-events-none" />
-
+    <div className="min-h-full bg-[#F8F9FC] pb-6">
       {/* Header */}
-      <div className="px-6 pt-10 pb-6 relative z-10">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <p className="text-slate-500 text-xs font-semibold mb-1 uppercase tracking-widest">Selamat Datang</p>
-            <h1 className="text-slate-900 text-2xl font-extrabold font-heading tracking-tight">{profile?.name?.split(' ')[0] ?? 'Pengguna'} 👋</h1>
-          </div>
-          <Link to="/notifikasi" className="relative p-3 bg-white rounded-full text-slate-600 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:bg-slate-50 transition-colors">
-            <Bell size={20} />
-            {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />}
-          </Link>
+      <div className="bg-indigo-700 px-5 pt-12 pb-20 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/40 rounded-full" />
+          <div className="absolute top-6 right-8 w-20 h-20 bg-indigo-500/30 rounded-full" />
         </div>
-
-        {/* Main Balance/Summary Card */}
-        <div className="bg-indigo-600 rounded-3xl p-6 shadow-[0_8px_20px_rgb(79,70,229,0.25)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-900/20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/3" />
-          
-          <div className="relative z-10">
-            <p className="text-indigo-100 text-xs font-medium mb-1.5 opacity-90">Total Tagihan Belum Dibayar</p>
-            <span className="text-white text-3xl font-extrabold tracking-tight">{formatCurrency(totalBillAmount)}</span>
-            {totalUrgent > 0 && (
-              <div className="mt-4 inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
-                <span className="text-[10px]">⚠️</span>
-                <p className="text-white text-[10px] font-bold tracking-wide">{totalUrgent} Item Mendesak</p>
-              </div>
-            )}
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <p className="text-indigo-200 text-xs font-medium mb-1">Selamat pagi,</p>
+            <h1 className="text-white text-2xl font-bold">{firstName}!</h1>
+            <p className="text-indigo-200 text-xs mt-1">
+              {totalUrgent > 0
+                ? `Anda memiliki ${totalUrgent} pengingat mendesak hari ini.`
+                : 'Semua aset Anda dalam kondisi aman.'}
+            </p>
           </div>
+          <Link to="/notifikasi" className="relative w-10 h-10 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
+            <Bell size={18} className="text-white" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full border border-indigo-700" />
+            )}
+          </Link>
         </div>
       </div>
 
-      <div className="px-6 relative z-20 space-y-6">
-        {/* Ads Banner */}
-        <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-4 text-white shadow-[0_8px_20px_rgb(245,158,11,0.2)] flex justify-between items-center relative overflow-hidden">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-white/20 rounded-full blur-xl translate-x-1/2 -translate-y-1/2" />
-          <div className="relative z-10">
-            <h3 className="font-extrabold text-sm mb-0.5 tracking-tight">Premium Plan</h3>
-            <p className="text-[11px] text-amber-50 font-medium">Bebas limit notifikasi WhatsApp.</p>
+      <div className="px-4 -mt-14 relative z-10 space-y-4">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-4 gap-2">
+          {stats.map((s, i) => (
+            <div key={i} className={`rounded-2xl p-3 flex flex-col gap-1 ${s.color} ${s.border ? 'border border-gray-200 shadow-sm' : 'shadow-md'}`}>
+              <span className={`text-xl font-bold ${s.textColor}`}>{s.value}</span>
+              <span className={`text-[9px] font-semibold leading-tight ${s.border ? 'text-gray-500' : 'text-indigo-200'}`}>{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Total Tagihan Card */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p className="text-xs text-gray-400 font-medium mb-1">Total Tagihan Belum Bayar</p>
+          <p className="text-2xl font-bold text-indigo-700">{formatCurrency(totalBillAmount)}</p>
+          <div className="flex gap-2 mt-3">
+            <div className="flex-1 bg-indigo-50 rounded-xl p-2.5">
+              <p className="text-[10px] text-indigo-500 font-medium">Tagihan</p>
+              <p className="text-sm font-bold text-indigo-700">{unpaidBills.length} item</p>
+            </div>
+            <div className="flex-1 bg-amber-50 rounded-xl p-2.5">
+              <p className="text-[10px] text-amber-500 font-medium">Jatuh Tempo</p>
+              <p className="text-sm font-bold text-amber-700">{urgentBills.length} segera</p>
+            </div>
           </div>
-          <Link to="/upgrade" className="relative z-10 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-xl text-[10px] font-bold backdrop-blur-md uppercase tracking-wider">
-            Upgrade
-          </Link>
         </div>
 
         {/* Quick Access */}
         <div>
-          <h2 className="text-sm font-bold text-slate-800 mb-3 font-heading tracking-tight">Kategori</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <h2 className="text-sm font-bold text-gray-800 mb-3">Kategori</h2>
+          <div className="grid grid-cols-4 gap-2">
             {[
-              { path: '/tagihan', label: 'Tagihan', icon: <Zap size={22} />, iconBg: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white', count: bills.filter(b=>b.status==='unpaid').length },
-              { path: '/pajak', label: 'Pajak', icon: <CreditCard size={22} />, iconBg: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white', count: docs.length },
-              { path: '/servis', label: 'Servis', icon: <ShieldAlert size={22} />, iconBg: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white', count: services.length },
+              { path: '/tagihan', label: 'Tagihan', icon: <Receipt size={20} />, bg: 'bg-indigo-50', color: 'text-indigo-600', count: unpaidBills.length },
+              { path: '/pajak', label: 'Pajak', icon: <Shield size={20} />, bg: 'bg-violet-50', color: 'text-violet-600', count: docs.length },
+              { path: '/servis', label: 'Servis', icon: <Wrench size={20} />, bg: 'bg-blue-50', color: 'text-blue-600', count: services.length },
+              { path: '/dokumen', label: 'Dokumen', icon: <FileText size={20} />, bg: 'bg-emerald-50', color: 'text-emerald-600', count: 0 },
             ].map(item => (
-              <Link key={item.path} to={item.path} className="group flex flex-col items-center gap-2 p-4 bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] active:scale-[0.98] transition-all">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${item.iconBg}`}>
+              <Link key={item.path} to={item.path} className="flex flex-col items-center gap-2 bg-white rounded-2xl p-3 border border-gray-100 shadow-sm active:scale-95 transition-transform">
+                <div className={`w-10 h-10 ${item.bg} ${item.color} rounded-xl flex items-center justify-center`}>
                   {item.icon}
                 </div>
-                <span className="text-xs font-bold text-slate-700">{item.label}</span>
+                <span className="text-[10px] font-semibold text-gray-600">{item.label}</span>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Urgent Items */}
+        {/* Upcoming Due */}
         <div>
-          <div className="flex justify-between items-end mb-3">
-            <h2 className="text-sm font-bold text-slate-800 font-heading tracking-tight">Mendesak!</h2>
-            <Link to="/tagihan" className="text-indigo-600 text-xs font-bold hover:underline flex items-center gap-1">
-              Lihat Semua <ArrowRight size={14} />
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-sm font-bold text-gray-800">Mendekati Jatuh Tempo</h2>
+            <Link to="/tagihan" className="text-indigo-600 text-xs font-semibold flex items-center gap-0.5">
+              Lihat Semua <ChevronRight size={14} />
             </Link>
           </div>
 
-          {totalUrgent === 0 ? (
-            <div className="bg-white rounded-3xl p-8 text-center shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl mb-3 shadow-[0_8px_30px_rgb(16,185,129,0.15)]">✓</div>
-              <h3 className="font-bold text-slate-800 text-base mb-1">Semua Aman!</h3>
-              <p className="text-slate-500 text-xs font-medium">Tidak ada tagihan mendesak minggu ini.</p>
+          {allUpcoming.length === 0 ? (
+            <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
+              <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-emerald-500 text-xl">✓</span>
+              </div>
+              <p className="font-semibold text-gray-700 text-sm">Semua Aman!</p>
+              <p className="text-gray-400 text-xs mt-0.5">Tidak ada item mendesak minggu ini.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {urgentBills.slice(0, 3).map(bill => {
-                const days = getDaysLeft(bill.due_date);
-                return (
-                  <div key={bill.id} className="bg-white p-4 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 flex items-center gap-4 relative overflow-hidden active:scale-[0.98] transition-transform">
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500" />
-                    <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 shrink-0">
-                      <Receipt size={24} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-800 text-sm truncate">{bill.name}</h4>
-                      <p className="text-xs font-medium text-slate-500 mt-0.5">Jatuh tempo: {formatDate(bill.due_date)}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-extrabold text-slate-800 text-sm">{formatCurrency(bill.amount)}</p>
-                      <div className="inline-block px-2 py-0.5 bg-red-50 text-red-600 rounded-md mt-1">
-                        <p className="text-[10px] font-bold">{days} Hari Lagi</p>
-                      </div>
-                    </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+              {allUpcoming.map((item, idx) => (
+                <div key={`${item.id}-${idx}`} className="flex items-center gap-3 px-4 py-3">
+                  <div className={`w-8 h-8 ${item.bg} ${item.color} rounded-xl flex items-center justify-center shrink-0`}>
+                    {item.icon}
                   </div>
-                );
-              })}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{item.title}</p>
+                    <p className="text-[10px] text-gray-400 font-medium">{item.sub} · {formatDate(item.date)}</p>
+                  </div>
+                  <DaysChip days={item.days} />
+                </div>
+              ))}
             </div>
           )}
+        </div>
+
+        {/* Upgrade Banner */}
+        <div className="bg-indigo-700 rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-600/50 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+            <Star size={18} className="text-yellow-300" />
+          </div>
+          <div className="flex-1 relative z-10">
+            <p className="text-white font-bold text-sm">Upgrade ke Premium</p>
+            <p className="text-indigo-200 text-[10px] mt-0.5">Notifikasi WA tak terbatas & backup cloud.</p>
+          </div>
+          <Link to="/upgrade" className="relative z-10 bg-white text-indigo-700 text-[10px] font-bold px-3 py-1.5 rounded-lg shrink-0">
+            Mulai
+          </Link>
         </div>
       </div>
     </div>

@@ -1,72 +1,42 @@
-import { Check, Star, Download, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Download } from 'lucide-react';
 
 export default function PaymentSuccess() {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4">
-      <div className="max-w-xl w-full flex flex-col items-center">
-        {/* Success Icon */}
-        <div className="relative mb-8 mt-12">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-300/30 rounded-full blur-2xl" />
-          <div className="absolute -top-4 -right-4 w-12 h-12 bg-amber-200/50 rounded-full blur-xl" />
-          <div className="relative w-32 h-32 bg-emerald-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-400/30">
-            <div className="w-16 h-16 bg-emerald-900 rounded-full flex items-center justify-center">
-              <Check size={36} className="text-emerald-400" strokeWidth={3} />
-            </div>
+    <div className="min-h-full bg-gradient-to-b from-indigo-50 to-white flex flex-col items-center justify-center px-6 py-16">
+      <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/30">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Pembayaran Berhasil!</h1>
+      <p className="text-gray-500 text-sm text-center mb-6">Terima kasih atas pembayarannya. Akun Anda kini telah diperbarui secara otomatis.</p>
+
+      <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-sm px-4 py-2 rounded-full mb-8">
+        ✦ Premium Aktif
+      </div>
+
+      <div className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-8 space-y-3">
+        <p className="font-bold text-gray-800 text-sm">Detail Transaksi</p>
+        {[
+          { label: 'ID Transaksi', value: '#ING-88294401' },
+          { label: 'Waktu Pembayaran', value: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) },
+          { label: 'Nominal', value: 'Rp 149.000', bold: true, color: 'text-indigo-700' },
+          { label: 'Metode Pembayaran', value: 'Virtual Account' },
+        ].map((item,i) => (
+          <div key={i} className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">{item.label}</span>
+            <span className={`text-sm ${item.bold ? 'font-bold' : 'font-medium'} ${item.color ?? 'text-gray-800'}`}>{item.value}</span>
           </div>
-        </div>
+        ))}
+      </div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-3 font-heading">Pembayaran Berhasil!</h1>
-        <p className="text-slate-500 text-center mb-6">Terima kasih atas pembayarannya. Akun Anda kini telah diperbarui secara otomatis.</p>
-        
-        <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full font-bold text-sm mb-12 shadow-sm border border-emerald-200">
-          <Star size={16} className="text-emerald-600" /> Premium Aktif
-        </div>
-
-        {/* Transaction Detail Card */}
-        <div className="w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Detail Transaksi</h3>
-            <ReceiptIcon size={20} className="text-slate-400" />
-          </div>
-
-          <div className="space-y-4 text-sm">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-              <span className="text-slate-500">ID Transaksi</span>
-              <span className="font-bold text-slate-800">#ING-88294401</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-              <span className="text-slate-500">Waktu Pembayaran</span>
-              <span className="font-bold text-slate-800">24 Okt 2024, 14:30 WIB</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-              <span className="text-slate-500">Nominal</span>
-              <span className="font-bold text-indigo-700 text-lg">Rp 149.000</span>
-            </div>
-            <div className="flex justify-between items-center pt-2">
-              <span className="text-slate-500">Metode Pembayaran</span>
-              <span className="font-bold text-slate-800">Virtual Account</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full">
-          <Link to="/" className="flex-1">
-            <button className="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md">
-              <LayoutDashboard size={18} /> Kembali ke Dashboard
-            </button>
-          </Link>
-          <button className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors">
-            <Download size={18} /> Unduh Resi
-          </button>
-        </div>
-
-        <p className="text-xs text-slate-500 mt-12 mb-4 text-center">Butuh bantuan? <a href="#" className="text-indigo-600 hover:underline">Hubungi Support</a></p>
-        <p className="text-[10px] text-slate-400 text-center">© 2024 INGETIN Assistant. All rights reserved.</p>
+      <div className="w-full space-y-3">
+        <Link to="/" className="flex items-center justify-center gap-2 w-full bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-700/25">
+          Kembali ke Dashboard
+        </Link>
+        <button className="flex items-center justify-center gap-2 w-full border border-gray-200 text-gray-600 font-bold py-3 rounded-xl">
+          <Download size={16} /> Unduh Resi
+        </button>
       </div>
     </div>
   );
 }
-
-function ReceiptIcon(props: any) { return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>; }

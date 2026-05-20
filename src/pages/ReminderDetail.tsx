@@ -1,72 +1,105 @@
-import { Receipt, Calendar, Edit2, Trash2, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Edit2, Trash2, Calendar, CreditCard, Upload, FileText } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function ReminderDetail() {
+  const location = useLocation();
+  const bill = (location.state as any)?.bill;
+
+  function formatDate(dateStr: string) {
+    if (!dateStr) return '-';
+    return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(dateStr));
+  }
+
+  function formatCurrency(amount: number) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  }
+
+  function getDaysLeft(dateStr: string) {
+    if (!dateStr) return 999;
+    const diff = new Date(dateStr).getTime() - new Date().setHours(0,0,0,0);
+    return Math.ceil(diff / 86400000);
+  }
+
+  if (!bill) {
+    return (
+      <div className="min-h-full bg-[#F8F9FC] flex items-center justify-center">
+        <div className="text-center px-6">
+          <FileText size={40} className="text-gray-300 mx-auto mb-3" />
+          <p className="font-semibold text-gray-600">Data tidak ditemukan</p>
+          <Link to="/tagihan" className="text-indigo-600 font-bold text-sm mt-2 block">← Kembali ke Tagihan</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const days = getDaysLeft(bill.due_date);
+
   return (
-    <div className="min-h-full bg-slate-50 pb-4">
-      {/* Header */}
-      <div className="bg-white px-5 pt-8 pb-4 shadow-sm relative z-10 flex items-center gap-3 sticky top-0">
-        <Link to="/tagihan" className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
-          <ArrowLeft size={16} />
-        </Link>
-        <h1 className="text-lg font-bold text-slate-800 font-heading">Detail Tagihan</h1>
+    <div className="min-h-full bg-[#F8F9FC] pb-8">
+      <div className="bg-white px-5 pt-12 pb-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link to="/tagihan" className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+            <ArrowLeft size={16} />
+          </Link>
+          <h1 className="text-base font-bold text-gray-900">{bill.name}</h1>
+        </div>
+        <div className="flex gap-1">
+          <button className="w-8 h-8 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Edit2 size={14} /></button>
+          <button className="w-8 h-8 flex items-center justify-center rounded-xl bg-red-50 text-red-500"><Trash2 size={14} /></button>
+        </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-          <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
-            <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Status</span>
-              <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded font-bold text-[10px]">Mendesak</span>
+      <div className="px-4 pt-5 space-y-4">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${days <= 2 ? 'bg-red-500' : days <= 7 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+              <span className={`text-xs font-bold ${days <= 2 ? 'text-red-600' : days <= 7 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                {days < 0 ? 'Terlambat' : days === 0 ? 'Hari Ini' : `Jatuh tempo dalam ${days} hari lagi`}
+              </span>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Total Tagihan</span>
-              <p className="font-bold text-blue-700 text-xl">Rp 1.450.000</p>
-            </div>
+            <span className="text-xl font-bold text-indigo-700">{formatCurrency(bill.amount)}</span>
           </div>
-          <h2 className="text-base font-bold text-slate-800 mb-1">Listrik & Air - Apartemen</h2>
-          <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-            Tagihan rutin bulanan untuk unit Apartemen Sudirman Park Kav. 12. Termasuk biaya abonemen listrik PLN 4400VA.
-          </p>
-          <div className="flex gap-2">
-            <button className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl flex justify-center items-center gap-1.5"><Edit2 size={14} /> Edit</button>
-            <button className="flex-1 py-2.5 bg-red-50 text-red-600 font-bold text-xs rounded-xl flex justify-center items-center gap-1.5"><Trash2 size={14} /> Hapus</button>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-          <h3 className="font-bold text-slate-800 text-sm mb-4">Informasi Tagihan</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0"><Calendar size={16} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 rounded-xl p-3 flex gap-2 items-start">
+              <Calendar size={14} className="text-indigo-600 mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase">Jatuh Tempo</p>
-                <p className="text-xs font-bold text-slate-700">25 Juni 2024</p>
+                <p className="text-[9px] text-gray-400 font-medium">Tanggal Jatuh Tempo</p>
+                <p className="text-xs font-bold text-gray-800 mt-0.5">{formatDate(bill.due_date)}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0"><Receipt size={16} /></div>
+            <div className="bg-gray-50 rounded-xl p-3 flex gap-2 items-start">
+              <CreditCard size={14} className="text-indigo-600 mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase">Metode Pembayaran</p>
-                <p className="text-xs font-bold text-slate-700">Virtual Account BCA</p>
+                <p className="text-[9px] text-gray-400 font-medium">Metode Pembayaran</p>
+                <p className="text-xs font-bold text-gray-800 mt-0.5">Virtual Account</p>
               </div>
             </div>
           </div>
+
+          <div className="mt-3">
+            <div className="flex justify-between mb-1">
+              <span className="text-[9px] text-gray-400 font-medium">Progress Pembayaran</span>
+              <span className={`text-[9px] font-bold ${days <= 3 ? 'text-red-600' : 'text-gray-600'}`}>{Math.min(100, Math.max(0, Math.round((1 - days/30)*100)))}% Menuju Jatuh Tempo</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full ${days <= 3 ? 'bg-red-500' : days <= 7 ? 'bg-amber-500' : 'bg-indigo-500'}`}
+                style={{ width: `${Math.min(100, Math.max(0, Math.round((1 - days/30)*100)))}%` }} />
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-          <h3 className="font-bold text-slate-800 text-sm mb-4">Histori Aktivitas</h3>
-          <div className="relative pl-4 border-l-2 border-slate-100 space-y-4">
-            <div className="relative">
-              <div className="absolute w-2.5 h-2.5 bg-blue-600 rounded-full -left-[21px] top-1 border-2 border-white" />
-              <p className="text-xs font-bold text-slate-800">Status berubah Mendesak</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Hari ini, 09:45</p>
-            </div>
-            <div className="relative">
-              <div className="absolute w-2.5 h-2.5 bg-slate-300 rounded-full -left-[21px] top-1 border-2 border-white" />
-              <p className="text-xs font-bold text-slate-800">Pengingat dibuat</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">01 Jun 2024, 08:00</p>
-            </div>
+        {/* Upload */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-4">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm font-bold text-gray-800">Dokumen Terlampir</p>
+            <button className="text-indigo-600 text-xs font-bold flex items-center gap-1"><Upload size={12} /> Unggah Baru</button>
+          </div>
+          <div className="border-2 border-dashed border-gray-200 rounded-xl p-5 flex flex-col items-center gap-2">
+            <FileText size={24} className="text-gray-400" />
+            <p className="text-sm text-gray-500 font-medium">Belum ada dokumen</p>
+            <p className="text-xs text-gray-400">Tambahkan bukti bayar atau tagihan</p>
           </div>
         </div>
       </div>

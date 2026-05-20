@@ -1,118 +1,96 @@
 import { useState } from 'react';
-import { LogOut, Check, MessageSquare, Mail, ChevronRight, User } from 'lucide-react';
-import { useProfile } from '../hooks/useProfile';
+import { Camera, ChevronRight, LogOut, Bell, Lock, Star, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-
-const INPUT_CLS = 'w-full border border-slate-200 rounded-xl py-3 px-4 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500';
+import { Link } from 'react-router-dom';
 
 export default function SettingsPage() {
-  const { signOut } = useAuth();
-  const { profile, saving, updateProfile } = useProfile();
-  const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [saved, setSaved] = useState(false);
-
-  if (profile && name === '' && profile.name) setName(profile.name);
-  if (profile && whatsapp === '' && profile.whatsapp) setWhatsapp(profile.whatsapp);
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await updateProfile({ name: name || profile?.name, whatsapp: whatsapp || undefined });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/login');
-  };
+  const { profile, signOut } = useAuth();
+  const [name, setName] = useState(profile?.name ?? '');
 
   return (
-    <div className="min-h-full bg-slate-50 pb-8">
+    <div className="min-h-full bg-[#F8F9FC] pb-6">
       {/* Header */}
-      <div className="bg-white px-5 pt-8 pb-4 shadow-sm relative z-10 flex justify-between items-center sticky top-0">
-        <h1 className="text-xl font-bold text-slate-800 font-heading">Pengaturan</h1>
+      <div className="bg-indigo-700 px-5 pt-12 pb-16 relative overflow-hidden">
+        <div className="absolute -top-8 -right-8 w-36 h-36 bg-indigo-600/40 rounded-full" />
+        <h1 className="text-white text-lg font-bold relative z-10">Pengaturan</h1>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Profile Info */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-xl font-bold text-indigo-600 shrink-0">
-            {profile?.name?.[0]?.toUpperCase() ?? <User size={24} />}
+      {/* Avatar */}
+      <div className="flex justify-center -mt-10 mb-4 relative z-10">
+        <div className="relative">
+          <div className="w-20 h-20 bg-indigo-200 rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
+            <User size={32} className="text-indigo-700" />
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-800 text-lg truncate">{profile?.name ?? 'Pengguna'}</h3>
-            <p className="text-slate-500 text-xs truncate">{profile?.email}</p>
-            <span className={`inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${profile?.subscription_tier === 'premium' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
-              {profile?.subscription_tier === 'premium' ? 'PREMIUM' : 'FREE PLAN'}
-            </span>
-          </div>
-        </div>
-
-        {/* Edit Form */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-slate-800 text-sm mb-4">Informasi Personal</h3>
-          <form onSubmit={handleSave} className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Nama Lengkap</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder={profile?.name ?? 'Nama Anda'} className={INPUT_CLS} />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">No. WhatsApp</label>
-              <input type="text" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="+62 8xxx" className={INPUT_CLS} />
-            </div>
-            <button disabled={saving} className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors">
-              {saved ? <><Check size={16} /> Tersimpan!</> : saving ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Menyimpan...</> : 'Simpan Perubahan'}
-            </button>
-          </form>
-        </div>
-
-        {/* Prefs */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-slate-800 text-sm mb-4">Preferensi Notifikasi</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><MessageSquare size={14} /></div>
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-800">WhatsApp Alert</h4>
-                  <p className="text-[10px] text-slate-500">Pengingat H-7 jatuh tempo</p>
-                </div>
-              </div>
-              <div className={`w-10 h-6 rounded-full relative cursor-pointer ${profile?.whatsapp ? 'bg-emerald-400' : 'bg-slate-200'}`}>
-                <div className="w-4 h-4 bg-white rounded-full absolute right-1 top-1 shadow-sm" />
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><Mail size={14} /></div>
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-800">Email Digest</h4>
-                  <p className="text-[10px] text-slate-500">Laporan bulanan aset</p>
-                </div>
-              </div>
-              <div className="w-10 h-6 bg-emerald-400 rounded-full relative cursor-pointer"><div className="w-4 h-4 bg-white rounded-full absolute right-1 top-1 shadow-sm" /></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Links & Danger */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-          <button className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition">
-            <span className="text-sm font-semibold text-slate-700">Ubah Kata Sandi</span>
-            <ChevronRight size={16} className="text-slate-400" />
-          </button>
-          <button className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition">
-            <span className="text-sm font-semibold text-slate-700">Bantuan & FAQ</span>
-            <ChevronRight size={16} className="text-slate-400" />
-          </button>
-          <button onClick={handleSignOut} className="w-full px-5 py-4 flex items-center justify-center gap-2 hover:bg-red-50 text-red-600 transition">
-            <LogOut size={16} />
-            <span className="text-sm font-bold">Keluar Akun</span>
+          <button className="absolute bottom-0 right-0 w-7 h-7 bg-indigo-700 rounded-full flex items-center justify-center border-2 border-white">
+            <Camera size={12} className="text-white" />
           </button>
         </div>
+      </div>
+      <p className="text-center font-bold text-gray-900 text-base">{profile?.name ?? 'Pengguna'}</p>
+      <p className="text-center text-gray-400 text-xs mt-0.5 mb-6">{profile?.email ?? ''}</p>
+
+      {/* Premium Banner */}
+      <div className="mx-4 mb-5 bg-indigo-700 rounded-2xl p-4 flex items-center gap-3">
+        <div className="w-9 h-9 bg-white/15 rounded-xl flex items-center justify-center">
+          <Star size={18} className="text-yellow-300" />
+        </div>
+        <div className="flex-1">
+          <p className="text-white font-bold text-sm">Upgrade ke Premium</p>
+          <p className="text-indigo-200 text-[10px]">Notifikasi WA tak terbatas & cloud backup.</p>
+        </div>
+        <Link to="/upgrade" className="bg-white text-indigo-700 font-bold text-[10px] px-3 py-1.5 rounded-lg">
+          Mulai
+        </Link>
+      </div>
+
+      {/* Profile Form */}
+      <div className="mx-4 mb-4 bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+        <p className="text-sm font-bold text-gray-800 mb-3">Edit Profil</p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-[10px] font-semibold text-gray-500 mb-1 block uppercase tracking-wide">Nama Lengkap</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full border border-gray-200 bg-gray-50 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-semibold text-gray-500 mb-1 block uppercase tracking-wide">Email</label>
+            <input
+              value={profile?.email ?? ''}
+              disabled
+              className="w-full border border-gray-200 bg-gray-100 rounded-xl py-2.5 px-3.5 text-sm text-gray-500 cursor-not-allowed"
+            />
+          </div>
+        </div>
+        <button className="w-full mt-4 bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm">
+          Simpan Perubahan
+        </button>
+      </div>
+
+      {/* Menu Items */}
+      <div className="mx-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+        {[
+          { icon: <Lock size={16} />, label: 'Keamanan & Password', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+          { icon: <Bell size={16} />, label: 'Preferensi Notifikasi', color: 'text-amber-600', bg: 'bg-amber-50' },
+        ].map((item,i) => (
+          <button key={i} className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-gray-50 transition-colors">
+            <div className={`w-8 h-8 ${item.bg} ${item.color} rounded-xl flex items-center justify-center`}>{item.icon}</div>
+            <span className="text-sm font-semibold text-gray-700 flex-1 text-left">{item.label}</span>
+            <ChevronRight size={15} className="text-gray-400" />
+          </button>
+        ))}
+      </div>
+
+      {/* Logout */}
+      <div className="mx-4 mt-4">
+        <button
+          onClick={signOut}
+          className="flex items-center justify-center gap-2 w-full border border-red-200 text-red-600 font-bold py-3 rounded-2xl text-sm hover:bg-red-50 transition-colors"
+        >
+          <LogOut size={16} /> Keluar dari Akun
+        </button>
       </div>
     </div>
   );

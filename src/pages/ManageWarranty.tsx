@@ -1,149 +1,104 @@
-import { useState } from 'react';
-import { Plus, Trash2, UploadCloud } from 'lucide-react';
+import { Plus, Shield, ShieldAlert, Package } from 'lucide-react';
 import { useWarranties } from '../hooks/useWarranties';
-import { getUrgency, urgencyColor, formatDate, getDaysLeft } from '../types';
-import type { AssetInsert, WarrantyInsert } from '../types';
 
-const INPUT_CLS = 'w-full border border-slate-200 rounded-xl py-3 px-4 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500';
+function getDaysLeft(dateStr: string) {
+  if (!dateStr) return 999;
+  const diff = new Date(dateStr).getTime() - new Date().setHours(0,0,0,0);
+  return Math.ceil(diff / 86400000);
+}
 
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-white rounded-t-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto">
-        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-5" />
-        <div className="flex justify-between items-center mb-5">
-          <h3 className="text-lg font-bold text-slate-800">{title}</h3>
-          <button onClick={onClose} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">✕</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
+function formatDate(dateStr: string) {
+  if (!dateStr) return '-';
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(dateStr));
 }
 
 export default function ManageWarranty() {
-  const { assets, loading, addAsset, deleteAsset } = useWarranties();
-  const [showModal, setShowModal] = useState(false);
-  const [assetForm, setAssetForm] = useState<Partial<AssetInsert>>({});
-  const [warrantyForm, setWarrantyForm] = useState<Partial<Omit<WarrantyInsert, 'asset_id'>>>({ status: 'active' });
+  const { assets, loading } = useWarranties();
 
-  const expiring = assets.filter(a => a.warranties?.[0] && getDaysLeft(a.warranties[0].expiry_date) <= 30).length;
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!assetForm.name || !warrantyForm.expiry_date) return;
-    await addAsset(assetForm as AssetInsert, warrantyForm as Omit<WarrantyInsert, 'asset_id'>);
-    setShowModal(false);
-    setAssetForm({});
-    setWarrantyForm({ status: 'active' });
-  };
+  const soon = assets.filter(a => { const d = getDaysLeft(a.warranty_expiry); return d >= 0 && d <= 30; }).length;
+  const aman = assets.filter(a => getDaysLeft(a.warranty_expiry) > 30).length;
+  const total = assets.length;
 
   return (
-    <div className="min-h-full bg-slate-50 pb-4">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 px-5 pt-10 pb-16 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3" />
-        <div className="flex justify-between items-center mb-6">
+    <div className="min-h-full bg-[#F8F9FC] pb-6">
+      <div className="bg-white px-5 pt-12 pb-4 border-b border-gray-100 sticky top-0 z-10">
+        <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-white text-xl font-bold font-heading">Garansi Aset</h1>
-            <p className="text-violet-100 text-xs mt-0.5">Pantau masa berlaku garansi</p>
+            <h1 className="text-lg font-bold text-gray-900">Manajemen Garansi</h1>
+            <p className="text-xs text-gray-400 mt-0.5">Pantau masa berlaku garansi aset Anda.</p>
           </div>
-          <button onClick={() => setShowModal(true)} className="p-2 bg-white/20 rounded-full text-white"><Plus size={18} /></button>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
-            <p className="text-violet-100 text-xs mb-1">Total Aset</p>
-            <p className="text-white text-2xl font-bold">{assets.length}</p>
-          </div>
-          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/20 text-center">
-            <p className="text-red-200 text-xs mb-1">Segera Berakhir</p>
-            <p className={`text-2xl font-bold ${expiring > 0 ? 'text-red-300' : 'text-white'}`}>{expiring}</p>
-          </div>
+          <button className="flex items-center gap-1.5 bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-xl">
+            <Plus size={14} /> Tambah
+          </button>
         </div>
       </div>
 
-      <div className="px-4 -mt-6 relative z-10">
+      <div className="grid grid-cols-3 gap-3 px-4 py-4">
+        {[
+          { label: 'Segera Berakhir', value: soon, bg: 'bg-red-50', color: 'text-red-600' },
+          { label: 'Status Aman', value: aman, bg: 'bg-emerald-50', color: 'text-emerald-600' },
+          { label: 'Total Aset', value: total, bg: 'bg-indigo-50', color: 'text-indigo-700' },
+        ].map((s,i) => (
+          <div key={i} className={`${s.bg} rounded-2xl p-3`}>
+            <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+            <p className="text-[9px] text-gray-500 font-medium mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="px-4 space-y-3">
         {loading ? (
-          <div className="flex justify-center py-16"><div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin" /></div>
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+          </div>
         ) : assets.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-100 mb-4">
-            <div className="text-4xl mb-2">📱</div>
-            <p className="font-semibold text-slate-700 text-sm">Belum ada aset terdaftar</p>
-            <button onClick={() => setShowModal(true)} className="mt-3 text-indigo-600 font-bold text-xs hover:underline">+ Tambah sekarang</button>
+          <div className="bg-white rounded-2xl p-8 text-center border border-gray-100">
+            <Package size={32} className="text-gray-300 mx-auto mb-2" />
+            <p className="font-semibold text-gray-700 text-sm">Belum ada aset terdaftar</p>
+            <p className="text-gray-400 text-xs mt-1">Tambah produk untuk mulai memantau garansi.</p>
           </div>
         ) : (
-          <div className="space-y-3 mb-4">
-            {assets.map(asset => {
-              const warranty = asset.warranties?.[0];
-              const days = warranty ? getDaysLeft(warranty.expiry_date) : 9999;
-              const level = warranty ? getUrgency(warranty.expiry_date) : 'safe';
-              const colors = urgencyColor(level);
-              const totalDays = warranty?.duration_months ? warranty.duration_months * 30 : 365;
-              const usedPct = warranty ? Math.min(100, Math.round(((totalDays - days) / totalDays) * 100)) : 0;
-              return (
-                <div key={asset.id} className={`bg-white rounded-2xl p-4 shadow-sm border ${colors.border}`}>
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-2xl shrink-0">📱</div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold text-slate-800 text-sm">{asset.name}</h4>
-                          {asset.brand && <p className="text-xs text-slate-400">{asset.brand}</p>}
-                        </div>
-                        <span className={`text-[9px] font-bold px-2 py-1 rounded-full text-white ${colors.badge}`}>
-                          {days <= 30 ? 'SEGERA' : days <= 90 ? 'MENENGAH' : 'AMAN'}
-                        </span>
-                      </div>
+          assets.map(asset => {
+            const days = getDaysLeft(asset.warranty_expiry);
+            const pct = Math.min(100, Math.max(0, asset.total_warranty_months ? Math.round((1 - days / (asset.total_warranty_months * 30)) * 100) : 50));
+            return (
+              <div key={asset.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
+                      {days < 0 ? <ShieldAlert size={16} className="text-red-500" /> : <Shield size={16} className="text-indigo-600" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">{asset.name}</p>
+                      <p className="text-[10px] text-gray-400">Beli: {formatDate(asset.purchase_date)}</p>
                     </div>
                   </div>
-                  {warranty && (
-                    <>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <p className={`text-xs font-bold ${colors.text}`}>Sisa {Math.max(0, days)} hari</p>
-                        <p className="text-[10px] text-slate-400">{usedPct}% terpakai · Habis {formatDate(warranty.expiry_date)}</p>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3">
-                        <div className={`${colors.bar} h-1.5 rounded-full transition-all`} style={{ width: `${usedPct}%` }} />
-                      </div>
-                    </>
-                  )}
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold flex items-center justify-center gap-1">📄 Nota</button>
-                    <button className="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-semibold flex items-center justify-center gap-1"><UploadCloud size={12} /> Upload</button>
-                    <button onClick={() => { if(confirm('Hapus aset ini?')) deleteAsset(asset.id); }} className="px-3 py-2 bg-red-50 text-red-400 rounded-xl"><Trash2 size={14} /></button>
+                  {days < 0
+                    ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">Kedaluwarsa</span>
+                    : days <= 30
+                    ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Sisa {days} Hari</span>
+                    : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Aman</span>
+                  }
+                </div>
+                <div className="flex gap-2 mb-3">
+                  <div className="flex-1 bg-gray-50 rounded-xl p-2.5">
+                    <p className="text-[9px] text-gray-400 font-medium">Total Masa Garansi</p>
+                    <p className="text-xs font-bold text-gray-700 mt-0.5">{asset.total_warranty_months} Bulan</p>
+                  </div>
+                  <div className="flex-1 bg-gray-50 rounded-xl p-2.5">
+                    <p className="text-[9px] text-gray-400 font-medium">Berakhir</p>
+                    <p className={`text-xs font-bold mt-0.5 ${days < 0 ? 'text-red-600' : days <= 30 ? 'text-amber-600' : 'text-gray-700'}`}>{formatDate(asset.warranty_expiry)}</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        <button onClick={() => setShowModal(true)} className="w-full bg-violet-50 border-2 border-dashed border-violet-200 text-violet-700 font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm">
-          <Plus size={18} /> Tambah Produk Baru
-        </button>
-      </div>
-
-      {showModal && (
-        <Modal title="Tambah Produk & Garansi" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleAdd} className="space-y-4">
-            {[{lbl:'Nama Produk',k:'name',ph:'MacBook Pro, Kulkas Samsung...',req:true},{lbl:'Merek',k:'brand',ph:'Apple, Samsung...'},{lbl:'Tanggal Pembelian',k:'purchase_date',type:'date'}].map(f=>(
-              <div key={f.k}><label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">{f.lbl}</label>
-                <input type={f.type??'text'} required={f.req} value={(assetForm as any)[f.k]??''} onChange={e=>setAssetForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph??''} className={INPUT_CLS} />
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${days < 0 ? 'bg-red-500' : days <= 30 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+                </div>
+                <p className="text-right text-[9px] text-gray-400 font-medium mt-1">{pct}% Terpakai</p>
               </div>
-            ))}
-            <div><label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Garansi Berakhir</label>
-              <input type="date" required value={warrantyForm.expiry_date??''} onChange={e=>setWarrantyForm(f=>({...f,expiry_date:e.target.value}))} className={INPUT_CLS} />
-            </div>
-            <div><label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Durasi Garansi (bulan)</label>
-              <input type="number" value={warrantyForm.duration_months??''} onChange={e=>setWarrantyForm(f=>({...f,duration_months:Number(e.target.value)}))} placeholder="12" className={INPUT_CLS} />
-            </div>
-            <div className="flex gap-3 pt-1">
-              <button type="button" onClick={()=>setShowModal(false)} className="flex-1 py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 text-sm">Batal</button>
-              <button type="submit" className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-semibold text-sm">Simpan</button>
-            </div>
-          </form>
-        </Modal>
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
