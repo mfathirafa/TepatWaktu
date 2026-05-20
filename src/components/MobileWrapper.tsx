@@ -12,7 +12,7 @@ export default function MobileWrapper({ children }: { children: React.ReactNode 
   return (
     <div className="min-h-screen bg-gray-100 font-sans sm:flex sm:justify-center sm:items-center sm:p-4">
       {/* Phone Shell */}
-      <div className="w-full min-h-screen sm:min-h-0 sm:h-[844px] sm:max-w-[390px] bg-[#F8F9FC] relative flex flex-col sm:rounded-[40px] sm:shadow-2xl sm:overflow-hidden sm:border sm:border-gray-200">
+      <div className="w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] bg-[#F8F9FC] relative flex flex-col sm:rounded-[40px] sm:shadow-2xl sm:overflow-hidden sm:border sm:border-gray-200">
         {/* Scrollable Content */}
         <div className={`flex-1 overflow-y-auto no-scrollbar relative ${!hideBottomNav ? 'pb-28' : ''}`}>
           {children}
