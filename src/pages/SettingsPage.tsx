@@ -460,6 +460,7 @@ export default function SettingsPage() {
             className="inline-block bg-white hover:bg-indigo-50 text-indigo-700 text-[10px] font-extrabold px-5 py-2.5 rounded-xl shadow-sm hover:scale-105 active:scale-95 transition-all relative z-10"
           >
             Unlock Now
+          </Link>
         </div>
       )}
 
