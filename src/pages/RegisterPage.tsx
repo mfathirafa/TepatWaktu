@@ -92,8 +92,10 @@ export default function RegisterPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-24 bg-white relative">
         <div className="w-full max-w-md">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-4 mb-10">
-            <img src="/logo.png" alt="Ingetin Logo" className="w-20 h-20 object-contain scale-110" />
+          <Link to="/" className="flex items-center gap-3 mb-10">
+            <div className="w-14 h-14 relative flex items-center justify-center overflow-hidden">
+              <img src="/logo.png" alt="Ingetin Logo" className="absolute w-[180%] h-[180%] max-w-none object-contain" />
+            </div>
             <span className="text-3xl font-black text-slate-900 tracking-tight">Ingetin</span>
           </Link>
 

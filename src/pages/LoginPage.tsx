@@ -45,9 +45,9 @@ export default function LoginPage(): JSX.Element {
         <div className="absolute top-1/2 -left-8 w-32 h-32 bg-violet-200 opacity-30 rounded-full blur-2xl" />
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="mb-6 animate-bounce" style={{ animationDuration: '3000ms' }}>
-            <div className="w-36 h-36 rounded-[2rem] bg-white shadow-2xl flex items-center justify-center border border-gray-100/60 overflow-hidden">
-              <img src="/logo.png" alt="Ingetin Logo" className="w-[120%] h-[120%] object-contain" />
+          <div className="mb-4 animate-bounce" style={{ animationDuration: '3000ms' }}>
+            <div className="w-24 h-24 rounded-[1.5rem] bg-white shadow-2xl flex items-center justify-center border border-gray-100/60 overflow-hidden relative">
+              <img src="/logo.png" alt="Ingetin Logo" className="absolute w-[180%] h-[180%] max-w-none object-contain" />
             </div>
           </div>
 
