@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, FileText, Wrench, Bell } from 'lucide-react';
+import { Home, Scale, Wallet, Wrench, User } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 
 export default function BottomNav() {
@@ -7,11 +7,11 @@ export default function BottomNav() {
   const { unreadCount } = useNotifications();
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/tagihan', label: 'Tagihan', icon: Receipt },
-    { path: '/pajak', label: 'Pajak', icon: FileText },
+    { path: '/', label: 'Beranda', icon: Home },
+    { path: '/pajak', label: 'Pajak', icon: Scale },
+    { path: '/tagihan', label: 'Tagihan', icon: Wallet },
     { path: '/servis', label: 'Servis', icon: Wrench },
-    { path: '/notifikasi', label: 'Notifikasi', icon: Bell, badge: unreadCount },
+    { path: '/pengaturan', label: 'Profil', icon: User },
   ];
 
   return (
@@ -26,7 +26,7 @@ export default function BottomNav() {
             to={item.path}
             className="flex flex-col items-center gap-0.5 min-w-[56px] py-1"
           >
-            <div className={`relative p-2 rounded-xl transition-all duration-200 ${isActive ? 'bg-indigo-50' : ''}`}>
+            <div className={`relative px-4 py-1 rounded-2xl transition-all duration-200 ${isActive ? 'bg-indigo-50' : ''}`}>
               <Icon
                 size={20}
                 className={isActive ? 'text-indigo-700' : 'text-gray-400'}
@@ -38,7 +38,7 @@ export default function BottomNav() {
                 </span>
               )}
             </div>
-            <span className={`text-[10px] font-semibold leading-none ${isActive ? 'text-indigo-700' : 'text-gray-400'}`}>
+            <span className={`text-[10px] font-semibold leading-none mt-1.5 ${isActive ? 'text-indigo-700' : 'text-gray-400'}`}>
               {item.label}
             </span>
           </Link>

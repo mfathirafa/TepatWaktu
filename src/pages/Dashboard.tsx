@@ -2,13 +2,9 @@ import { useBills } from '../hooks/useBills';
 import { useLegalDocs } from '../hooks/useLegalDocs';
 import { useServices } from '../hooks/useServices';
 import { useAuth } from '../context/AuthContext';
-import { Bell, ChevronRight, Shield, Receipt, FileText, Wrench, Star } from 'lucide-react';
+import { Bell, ChevronDown, ChevronRight, FileText, Calendar, AlertTriangle, ClipboardList, Car, Trash2, Wrench, Receipt, CheckCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-}
 
 function getDaysLeft(dateStr: string) {
   if (!dateStr) return 999;
@@ -16,21 +12,29 @@ function getDaysLeft(dateStr: string) {
   return Math.ceil(diff / 86400000);
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return '-';
-  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(dateStr));
+function getDayName(dateStr: string) {
+  const date = new Date(dateStr);
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  return days[date.getDay()];
 }
 
-function DaysChip({ days }: { days: number }) {
-  if (days < 0) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">Terlambat</span>;
-  if (days === 0) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">Hari Ini</span>;
-  if (days <= 3) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-600">{days} Hari</span>;
-  if (days <= 7) return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-600">{days} Hari</span>;
-  return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600">{days} Hari</span>;
+function getMonthNameIndonesian(date: Date) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  return months[date.getMonth()];
+}
+
+function formatCurrencyCompact(amount: number) {
+  if (amount >= 1000000) {
+    return `Rp ${(amount / 1000000).toFixed(1).replace('.0', '')}jt`;
+  }
+  if (amount >= 1000) {
+    return `Rp ${(amount / 1000).toFixed(0)}rb`;
+  }
+  return `Rp ${amount}`;
 }
 
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { bills } = useBills();
   const { docs } = useLegalDocs();
   const { services } = useServices();
@@ -41,106 +45,253 @@ export default function Dashboard() {
   const urgentDocs = docs.filter(d => getDaysLeft(d.expiry_date) <= 30);
   const urgentServices = services.filter(s => getDaysLeft(s.next_service_date) <= 7);
   const totalUrgent = urgentBills.length + urgentDocs.length + urgentServices.length;
-  const totalBillAmount = unpaidBills.reduce((s, b) => s + (b.amount ?? 0), 0);
+
+  const totalReminders = bills.length + docs.length + services.length;
+  const activeReminders = unpaidBills.length + docs.filter(d => getDaysLeft(d.expiry_date) > 0).length + services.length;
+  const completedReminders = bills.filter(b => b.status === 'paid').length;
 
   const allUpcoming = [
-    ...urgentBills.map(b => ({ id: b.id, title: b.name, sub: 'Tagihan', date: b.due_date, days: getDaysLeft(b.due_date), color: 'text-indigo-600', bg: 'bg-indigo-50', icon: <Receipt size={16} /> })),
-    ...urgentDocs.map(d => ({ id: d.id, title: d.name, sub: 'Pajak & Legal', date: d.expiry_date, days: getDaysLeft(d.expiry_date), color: 'text-violet-600', bg: 'bg-violet-50', icon: <FileText size={16} /> })),
-    ...urgentServices.map(s => ({ id: s.id, title: s.name, sub: 'Servis', date: s.next_service_date, days: getDaysLeft(s.next_service_date), color: 'text-blue-600', bg: 'bg-blue-50', icon: <Wrench size={16} /> })),
+    ...unpaidBills.map(b => ({ id: b.id, title: b.name, date: b.due_date, days: getDaysLeft(b.due_date), amount: b.amount, type: 'bill' })),
+    ...docs.map(d => ({ id: d.id, title: d.name, date: d.expiry_date, days: getDaysLeft(d.expiry_date), type: 'doc' })),
+    ...services.map(s => ({ id: s.id, title: s.name, date: s.next_service_date, days: getDaysLeft(s.next_service_date), type: 'service' })),
   ].sort((a, b) => a.days - b.days).slice(0, 5);
 
-  const firstName = profile?.name?.split(' ')[0] ?? 'Pengguna';
+  const fullName = profile?.name || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Muhammad Fathi Rafa';
+  const firstName = fullName.split(' ')[0];
 
-  const stats = [
-    { label: 'Total Tagihan', value: bills.length + docs.length, color: 'bg-indigo-600', textColor: 'text-white' },
-    { label: 'Aktif', value: unpaidBills.length + docs.filter(d => getDaysLeft(d.expiry_date) > 0).length, color: 'bg-white', textColor: 'text-indigo-700', border: true },
-    { label: 'Mendesak', value: totalUrgent, color: 'bg-white', textColor: 'text-red-600', border: true },
-    { label: 'Selesai', value: bills.filter(b => b.status === 'paid').length, color: 'bg-white', textColor: 'text-emerald-600', border: true },
-  ];
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getWeeklyActivity = () => {
+    const daysOfWeek = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const today = new Date();
+    const currentDay = today.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + distanceToMonday);
+
+    const counts = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      const dayStr = getLocalDateString(date);
+      
+      const billCount = bills.filter(b => b.due_date && b.due_date.startsWith(dayStr)).length;
+      const docCount = docs.filter(d => d.expiry_date && d.expiry_date.startsWith(dayStr)).length;
+      const serviceCount = services.filter(s => s.next_service_date && s.next_service_date.startsWith(dayStr)).length;
+      
+      return {
+        day: daysOfWeek[i],
+        count: billCount + docCount + serviceCount
+      };
+    });
+
+    const maxCount = Math.max(...counts.map(c => c.count));
+
+    return counts.map(c => ({
+      day: c.day,
+      value: maxCount > 0 ? (c.count / maxCount) * 80 + 20 : 15,
+      count: c.count
+    }));
+  };
+
+  const activityData = getWeeklyActivity();
+
+  const getDisplayInfo = (item: any) => {
+    const titleLower = item.title.toLowerCase();
+    
+    let subText = '';
+    if (item.days === 0) {
+      subText = 'Hari ini';
+    } else if (item.days === 1) {
+      subText = 'Besok';
+    } else if (titleLower.includes('stnk') || titleLower.includes('pajak') || titleLower.includes('mobil') || titleLower.includes('motor')) {
+      subText = `Jatuh tempo ${item.days} hari lagi`;
+    } else if (item.days > 1 && item.days <= 7) {
+      subText = `${getDayName(item.date)} Depan`;
+    } else {
+      const d = new Date(item.date);
+      subText = `Dijadwalkan: ${d.getDate()} ${getMonthNameIndonesian(d)}`;
+    }
+
+    if (titleLower.includes('stnk') || titleLower.includes('pajak') || titleLower.includes('mobil') || titleLower.includes('motor')) {
+      return {
+        icon: <Car size={18} />,
+        iconColor: 'text-red-500',
+        iconBg: 'bg-red-50',
+        rightContent: <span className="text-xs font-bold text-red-500">Mendesak</span>,
+        subText
+      };
+    }
+    if (titleLower.includes('kebersihan') || titleLower.includes('sampah') || titleLower.includes('iuran')) {
+      const formattedAmount = item.amount ? formatCurrencyCompact(item.amount) : 'Rp 50rb';
+      return {
+        icon: <Trash2 size={18} />,
+        iconColor: 'text-indigo-600',
+        iconBg: 'bg-indigo-50',
+        rightContent: <span className="text-xs font-bold text-gray-500">{formattedAmount}</span>,
+        subText: item.days > 1 && item.days <= 7 ? `${getDayName(item.date)} Depan` : subText
+      };
+    }
+    if (titleLower.includes('ac') || titleLower.includes('service') || titleLower.includes('servis')) {
+      const d = new Date(item.date);
+      return {
+        icon: <Wrench size={18} />,
+        iconColor: 'text-amber-500',
+        iconBg: 'bg-amber-50',
+        rightContent: <span className="text-xs font-bold text-gray-400">Rumah</span>,
+        subText: `Dijadwalkan: ${d.getDate()} ${getMonthNameIndonesian(d)}`
+      };
+    }
+
+    return {
+      icon: item.type === 'bill' ? <Receipt size={18} /> : <FileText size={18} />,
+      iconColor: item.type === 'bill' ? 'text-indigo-500' : 'text-emerald-500',
+      iconBg: item.type === 'bill' ? 'bg-indigo-50' : 'bg-emerald-50',
+      rightContent: <span className="text-xs font-bold text-gray-500">{item.amount ? formatCurrencyCompact(item.amount) : 'Aset'}</span>,
+      subText
+    };
+  };
 
   return (
-    <div className="min-h-full bg-[#F8F9FC] pb-6">
+    <div className="min-h-full bg-[#F8F9FC] pb-24 relative">
       {/* Header */}
-      <div className="bg-indigo-700 px-5 pt-12 pb-20 relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/40 rounded-full" />
-          <div className="absolute top-6 right-8 w-20 h-20 bg-indigo-500/30 rounded-full" />
+      <div className="bg-white border-b border-gray-100 px-5 pt-6 pb-4 flex justify-between items-center shadow-sm">
+        <div className="flex items-center gap-3">
+          <img 
+            src={profile?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${user?.email || 'default'}`} 
+            alt="Profil" 
+            className="w-10 h-10 rounded-full object-cover border border-gray-100 bg-[#E8E7FD]" 
+          />
+          <span className="text-[#3525cd] font-extrabold text-lg tracking-wider">INGETIN</span>
         </div>
-        <div className="relative z-10 flex justify-between items-start">
-          <div>
-            <p className="text-indigo-200 text-xs font-medium mb-1">Selamat pagi,</p>
-            <h1 className="text-white text-2xl font-bold">{firstName}!</h1>
-            <p className="text-indigo-200 text-xs mt-1">
-              {totalUrgent > 0
-                ? `Anda memiliki ${totalUrgent} pengingat mendesak hari ini.`
-                : 'Semua aset Anda dalam kondisi aman.'}
-            </p>
-          </div>
-          <Link to="/notifikasi" className="relative w-10 h-10 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
-            <Bell size={18} className="text-white" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full border border-indigo-700" />
-            )}
-          </Link>
-        </div>
+        <Link to="/notifikasi" className="relative p-2 hover:bg-gray-50 rounded-full transition-colors">
+          <Bell size={22} className="text-[#3525cd]" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+          )}
+        </Link>
       </div>
 
-      <div className="px-4 -mt-14 relative z-10 space-y-4">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-2">
-          {stats.map((s, i) => (
-            <div key={i} className={`rounded-2xl p-3 flex flex-col gap-1 ${s.color} ${s.border ? 'border border-gray-200 shadow-sm' : 'shadow-md'}`}>
-              <span className={`text-xl font-bold ${s.textColor}`}>{s.value}</span>
-              <span className={`text-[9px] font-semibold leading-tight ${s.border ? 'text-gray-500' : 'text-indigo-200'}`}>{s.label}</span>
+      {/* Welcome Section */}
+      <div className="px-5 pt-6 pb-2">
+        <h1 className="text-[26px] font-extrabold text-gray-950 leading-tight">
+          Selamat pagi, {firstName}!
+        </h1>
+        <p className="text-gray-500 text-sm mt-2 flex items-center flex-wrap gap-1">
+          Anda memiliki
+          <span className="bg-red-100 text-red-600 font-bold px-2.5 py-0.5 rounded-full text-[11px] inline-flex items-center justify-center">
+            {totalUrgent} pengingat mendesak
+          </span>
+          hari ini.
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="flex gap-3 overflow-x-auto no-scrollbar px-5 py-3 mt-2">
+        {/* Card 1: Total */}
+        <div className="bg-[#EEEDFC]/70 border border-[#DCDAFF]/70 rounded-3xl p-5 min-w-[130px] flex-1 flex flex-col gap-4 shadow-sm">
+          <ClipboardList size={22} className="text-[#3525cd]" />
+          <div>
+            <p className="text-xs text-gray-500 font-semibold">Total</p>
+            <p className="text-2xl font-extrabold text-gray-950 mt-1">{totalReminders}</p>
+          </div>
+        </div>
+
+        {/* Card 2: Active */}
+        <div className="bg-[#EEEDFC]/70 border border-[#DCDAFF]/70 rounded-3xl p-5 min-w-[130px] flex-1 flex flex-col gap-4 shadow-sm">
+          <Calendar size={22} className="text-[#3525cd]" />
+          <div>
+            <p className="text-xs text-indigo-600 font-semibold">Aktif</p>
+            <p className="text-2xl font-extrabold text-gray-950 mt-1">{activeReminders}</p>
+          </div>
+        </div>
+
+        {/* Card 3: Urgent */}
+        <div className="bg-[#FDF2F2] border border-[#FDE8E8] rounded-3xl p-5 min-w-[130px] flex-1 flex flex-col gap-4 shadow-sm">
+          <AlertTriangle size={22} className="text-red-600" />
+          <div>
+            <p className="text-xs text-red-600 font-semibold">Mendesak</p>
+            <p className="text-2xl font-extrabold text-gray-950 mt-1">{totalUrgent}</p>
+          </div>
+        </div>
+
+        {/* Card 4: Selesai */}
+        <Link 
+          to="/riwayat" 
+          className="bg-[#EDFDF5]/80 border border-[#D1FAE5]/80 rounded-3xl p-5 min-w-[130px] flex-1 flex flex-col gap-4 shadow-sm hover:scale-[1.03] transition-all cursor-pointer"
+        >
+          <CheckCircle size={22} className="text-emerald-600" />
+          <div>
+            <p className="text-xs text-emerald-600 font-semibold flex items-center gap-0.5">
+              Selesai <ChevronRight size={12} className="stroke-[2.5]" />
+            </p>
+            <p className="text-2xl font-extrabold text-gray-950 mt-1">{completedReminders}</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Pusat Dokumen Quick Access Banner */}
+      <div className="px-5 mt-4">
+        <Link 
+          to="/dokumen" 
+          className="relative overflow-hidden bg-gradient-to-r from-[#3525cd] to-[#4f46e5] rounded-3xl p-5 flex justify-between items-center shadow-md shadow-indigo-600/10 hover:scale-[1.01] transition-all group block"
+        >
+          {/* Decorative background shape */}
+          <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-300" />
+          
+          <div className="flex-1 pr-4">
+            <span className="text-[9px] font-extrabold text-[#E8E7FD] tracking-wider uppercase bg-white/15 px-2.5 py-1 rounded-md">
+              Fitur Baru
+            </span>
+            <h3 className="text-white font-extrabold text-lg mt-2.5">Pusat Dokumen</h3>
+            <p className="text-[#DCDAFF] text-xs mt-1 font-medium leading-snug">
+              Simpan, pantau, dan digitalkan semua dokumen penting Anda di satu tempat aman.
+            </p>
+          </div>
+          
+          <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-inner group-hover:rotate-6 transition-transform duration-300">
+            <FileText size={24} className="stroke-[2]" />
+          </div>
+        </Link>
+      </div>
+
+      {/* Reminder Activity Chart */}
+      <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm mx-5 mt-4">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-bold text-gray-950 text-base">Aktivitas Pengingat</h3>
+          <button className="text-indigo-600 text-sm font-semibold flex items-center gap-1 hover:underline">
+            7 Hari Terakhir <ChevronDown size={16} />
+          </button>
+        </div>
+        <div className="flex justify-between items-end h-28 px-2">
+          {activityData.map((data, idx) => (
+            <div key={idx} className="flex flex-col items-center gap-2 flex-1">
+              <div className="w-2.5 bg-indigo-50 rounded-full h-20 flex flex-col justify-end overflow-hidden">
+                <div 
+                  className="w-full bg-indigo-600 rounded-full transition-all duration-500 animate-pulse" 
+                  style={{ height: `${data.value}%`, animationDuration: '2s' }} 
+                />
+              </div>
+              <span className="text-[11px] text-gray-400 font-medium">{data.day}</span>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Total Tagihan Card */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 font-medium mb-1">Total Tagihan Belum Bayar</p>
-          <p className="text-2xl font-bold text-indigo-700">{formatCurrency(totalBillAmount)}</p>
-          <div className="flex gap-2 mt-3">
-            <div className="flex-1 bg-indigo-50 rounded-xl p-2.5">
-              <p className="text-[10px] text-indigo-500 font-medium">Tagihan</p>
-              <p className="text-sm font-bold text-indigo-700">{unpaidBills.length} item</p>
-            </div>
-            <div className="flex-1 bg-amber-50 rounded-xl p-2.5">
-              <p className="text-[10px] text-amber-500 font-medium">Jatuh Tempo</p>
-              <p className="text-sm font-bold text-amber-700">{urgentBills.length} segera</p>
-            </div>
-          </div>
+      {/* Upcoming Section */}
+      <div className="mt-4">
+        <div className="flex justify-between items-center px-5 mb-3">
+          <h2 className="text-base font-extrabold text-gray-900">Mendatang</h2>
+          <Link to="/tagihan" className="text-indigo-600 text-xs font-bold hover:underline">
+            Lihat semua
+          </Link>
         </div>
 
-        {/* Quick Access */}
-        <div>
-          <h2 className="text-sm font-bold text-gray-800 mb-3">Kategori</h2>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { path: '/tagihan', label: 'Tagihan', icon: <Receipt size={20} />, bg: 'bg-indigo-50', color: 'text-indigo-600', count: unpaidBills.length },
-              { path: '/pajak', label: 'Pajak', icon: <Shield size={20} />, bg: 'bg-violet-50', color: 'text-violet-600', count: docs.length },
-              { path: '/servis', label: 'Servis', icon: <Wrench size={20} />, bg: 'bg-blue-50', color: 'text-blue-600', count: services.length },
-              { path: '/dokumen', label: 'Dokumen', icon: <FileText size={20} />, bg: 'bg-emerald-50', color: 'text-emerald-600', count: 0 },
-            ].map(item => (
-              <Link key={item.path} to={item.path} className="flex flex-col items-center gap-2 bg-white rounded-2xl p-3 border border-gray-100 shadow-sm active:scale-95 transition-transform">
-                <div className={`w-10 h-10 ${item.bg} ${item.color} rounded-xl flex items-center justify-center`}>
-                  {item.icon}
-                </div>
-                <span className="text-[10px] font-semibold text-gray-600">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Upcoming Due */}
-        <div>
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-sm font-bold text-gray-800">Mendekati Jatuh Tempo</h2>
-            <Link to="/tagihan" className="text-indigo-600 text-xs font-semibold flex items-center gap-0.5">
-              Lihat Semua <ChevronRight size={14} />
-            </Link>
-          </div>
-
+        <div className="px-5 space-y-3">
           {allUpcoming.length === 0 ? (
             <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
               <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -150,38 +301,29 @@ export default function Dashboard() {
               <p className="text-gray-400 text-xs mt-0.5">Tidak ada item mendesak minggu ini.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
-              {allUpcoming.map((item, idx) => (
-                <div key={`${item.id}-${idx}`} className="flex items-center gap-3 px-4 py-3">
-                  <div className={`w-8 h-8 ${item.bg} ${item.color} rounded-xl flex items-center justify-center shrink-0`}>
-                    {item.icon}
+            allUpcoming.map((item, idx) => {
+              const display = getDisplayInfo(item);
+              return (
+                <div key={`${item.id}-${idx}`} className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:border-gray-200 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 ${display.iconBg} ${display.iconColor} rounded-xl flex items-center justify-center shrink-0`}>
+                      {display.icon}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">{item.title}</p>
+                      <p className="text-xs text-gray-400 font-semibold mt-0.5">{display.subText}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{item.title}</p>
-                    <p className="text-[10px] text-gray-400 font-medium">{item.sub} · {formatDate(item.date)}</p>
+                  <div>
+                    {display.rightContent}
                   </div>
-                  <DaysChip days={item.days} />
                 </div>
-              ))}
-            </div>
+              );
+            })
           )}
         </div>
-
-        {/* Upgrade Banner */}
-        <div className="bg-indigo-700 rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-600/50 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-            <Star size={18} className="text-yellow-300" />
-          </div>
-          <div className="flex-1 relative z-10">
-            <p className="text-white font-bold text-sm">Upgrade ke Premium</p>
-            <p className="text-indigo-200 text-[10px] mt-0.5">Notifikasi WA tak terbatas & backup cloud.</p>
-          </div>
-          <Link to="/upgrade" className="relative z-10 bg-white text-indigo-700 text-[10px] font-bold px-3 py-1.5 rounded-lg shrink-0">
-            Mulai
-          </Link>
-        </div>
       </div>
+
     </div>
   );
 }
