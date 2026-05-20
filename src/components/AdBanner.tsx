@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { X, ExternalLink, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -13,13 +13,67 @@ export default function AdBanner({ type = 'horizontal', className = '' }: AdBann
   const { user } = useAuth();
   const { profile } = useProfile();
   const [closed, setClosed] = useState(false);
+  const [isLocalhost, setIsLocalhost] = useState(true);
+
+  useEffect(() => {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    setIsLocalhost(isLocal);
+
+    if (!isLocal && profile?.subscription_tier !== 'premium' && !closed) {
+      try {
+        // Trigger Google AdSense rendering
+        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+      } catch (e) {
+        console.warn('AdSense trigger failed, likely due to an adblocker or script still loading:', e);
+      }
+    }
+  }, [profile?.subscription_tier, closed]);
 
   // If user is a premium member, hide all ads
   if (profile?.subscription_tier === 'premium' || closed) {
     return null;
   }
 
-  // Define ad content variations for realistism
+  // Render real Google AdSense unit on production environment
+  if (!isLocalhost) {
+    return (
+      <div className={`relative bg-white border border-gray-150 rounded-3xl p-3 flex flex-col items-center justify-center shadow-sm overflow-hidden min-h-[110px] ${className}`}>
+        {/* Ad Label */}
+        <div className="absolute top-2 left-3 flex items-center gap-1.5 z-10">
+          <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+            Sponsor
+          </span>
+        </div>
+
+        {/* Close Button */}
+        <button 
+          onClick={() => setClosed(true)} 
+          className="absolute top-2 right-3 text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full z-10"
+          title="Tutup Iklan"
+        >
+          <X size={12} />
+        </button>
+
+        <div className="w-full flex justify-center py-3 overflow-hidden min-w-[250px] min-h-[90px]">
+          <ins className="adsbygoogle"
+               style={{ display: 'block', width: '100%', minHeight: '90px' }}
+               data-ad-client="ca-pub-6334717698722401"
+               data-ad-slot="auto"
+               data-full-width-responsive="true">
+          </ins>
+        </div>
+
+        <Link 
+          to="/upgrade" 
+          className="text-[9px] font-bold text-gray-400 hover:text-indigo-600 transition-colors flex items-center gap-1 mt-1 z-10"
+        >
+          <ShieldAlert size={10} /> Hapus Iklan dengan Premium
+        </Link>
+      </div>
+    );
+  }
+
+  // Fallback Mock UI for Localhost Preview
   const adsData = {
     horizontal: {
       title: 'Solusi Keuangan Anda',
@@ -55,14 +109,12 @@ export default function AdBanner({ type = 'horizontal', className = '' }: AdBann
   if (type === 'box') {
     return (
       <div className={`relative bg-gradient-to-b ${ad.bgGradient} border ${ad.borderColor} rounded-3xl p-5 flex flex-col items-center text-center shadow-sm overflow-hidden group ${className}`}>
-        {/* Ad Tag */}
         <div className="absolute top-3 left-4 flex items-center gap-1.5">
           <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${ad.badgeColor}`}>
             Sponsor
           </span>
         </div>
 
-        {/* Close button */}
         <button 
           onClick={() => setClosed(true)} 
           className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
@@ -108,14 +160,12 @@ export default function AdBanner({ type = 'horizontal', className = '' }: AdBann
   if (type === 'inline') {
     return (
       <div className={`relative bg-gradient-to-r ${ad.bgGradient} border ${ad.borderColor} rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:border-gray-200 transition-all ${className}`}>
-        {/* Ad Tag */}
         <div className="absolute top-2 right-10">
           <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${ad.badgeColor}`}>
             Sponsor
           </span>
         </div>
 
-        {/* Close Button */}
         <button 
           onClick={() => setClosed(true)} 
           className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
@@ -156,20 +206,17 @@ export default function AdBanner({ type = 'horizontal', className = '' }: AdBann
     );
   }
 
-  // Default: Horizontal Banner
   return (
     <div className={`relative bg-gradient-to-r ${ad.bgGradient} border ${ad.borderColor} rounded-3xl p-4 flex items-center justify-between shadow-sm overflow-hidden ${className}`}>
-      {/* Ad Tag */}
       <div className="absolute top-3 left-4">
         <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${ad.badgeColor}`}>
           Sponsor
         </span>
       </div>
 
-      {/* Close button */}
       <button 
         onClick={() => setClosed(true)} 
-        className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
+        className="absolute top-3 right-4 text-gray-450 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
         title="Tutup Iklan"
       >
         <X size={14} />
