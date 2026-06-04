@@ -19,7 +19,7 @@
 
 ## 🌟 Tentang Aplikasi
 
-**Ingetin** adalah aplikasi _all-in-one_ yang dirancang khusus untuk mempermudah hidup Anda dalam mengingat dan mengelola hal-hal penting yang sering terlupakan. Apakah itu batas waktu tagihan listrik bulanan, jadwal servis kendaraan, masa berlaku paspor, hingga tanggal habisnya garansi laptop kesayangan—semua dapat dilacak dan diingatkan oleh Ingetin.
+**TepatWaktu** adalah aplikasi _all-in-one_ yang dirancang khusus untuk mempermudah hidup Anda dalam mengingat dan mengelola hal-hal penting yang sering terlupakan. Apakah itu batas waktu tagihan listrik bulanan, jadwal servis kendaraan, masa berlaku paspor, hingga tanggal habisnya garansi laptop kesayangan—semua dapat dilacak dan diingatkan oleh Ingetin.
 
 Menggunakan pendekatan antarmuka bergaya *Glassmorphism* modern dan tata letak *Mobile-first*, aplikasi ini memastikan pengalaman pengguna yang sangat premium dan intuitif di berbagai ukuran perangkat keras.
 
