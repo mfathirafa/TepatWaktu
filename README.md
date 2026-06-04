@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://api.dicebear.com/7.x/shapes/svg?seed=Ingetin&backgroundColor=3525cd" alt="Ingetin Logo" width="120" height="120" style="border-radius: 24px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(53, 37, 205, 0.2);" />
   
-  # 📦 Ingetin
+  # 📦 Tepat Waktu
   
   **Super App Manajemen Aset, Garansi, Tagihan, & Dokumen Pribadi**
   
