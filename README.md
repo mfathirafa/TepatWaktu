@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://api.dicebear.com/7.x/shapes/svg?seed=Ingetin&backgroundColor=3525cd" alt="Ingetin Logo" width="120" height="120" style="border-radius: 24px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(53, 37, 205, 0.2);" />
   
-  # 📦 Ingetin
+  # 📦 Tepat Waktu
   
   **Super App Manajemen Aset, Garansi, Tagihan, & Dokumen Pribadi**
   
@@ -19,7 +19,7 @@
 
 ## 🌟 Tentang Aplikasi
 
-**Ingetin** adalah aplikasi _all-in-one_ yang dirancang khusus untuk mempermudah hidup Anda dalam mengingat dan mengelola hal-hal penting yang sering terlupakan. Apakah itu batas waktu tagihan listrik bulanan, jadwal servis kendaraan, masa berlaku paspor, hingga tanggal habisnya garansi laptop kesayangan—semua dapat dilacak dan diingatkan oleh Ingetin.
+**TepatWaktu** adalah aplikasi _all-in-one_ yang dirancang khusus untuk mempermudah hidup Anda dalam mengingat dan mengelola hal-hal penting yang sering terlupakan. Apakah itu batas waktu tagihan listrik bulanan, jadwal servis kendaraan, masa berlaku paspor, hingga tanggal habisnya garansi laptop kesayangan—semua dapat dilacak dan diingatkan oleh Ingetin.
 
 Menggunakan pendekatan antarmuka bergaya *Glassmorphism* modern dan tata letak *Mobile-first*, aplikasi ini memastikan pengalaman pengguna yang sangat premium dan intuitif di berbagai ukuran perangkat keras.
 
