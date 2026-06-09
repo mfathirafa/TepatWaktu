@@ -210,7 +210,7 @@ export default function Notifications() {
             alt="Profil" 
             className="w-10 h-10 rounded-full object-cover border border-gray-100 bg-[#E8E7FD]" 
           />
-          <span className="text-[#3525cd] font-extrabold text-lg tracking-wider">INGETIN</span>
+          <span className="text-[#3525cd] font-extrabold text-lg tracking-wider">TEPATWAKTU</span>
         </Link>
         <div className="w-8" />
       </div>

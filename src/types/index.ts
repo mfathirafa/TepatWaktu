@@ -1,5 +1,5 @@
 // ============================================================
-// Central type definitions for INGETIN
+// Central type definitions for TEPATWAKTU
 // ============================================================
 
 export interface Profile {

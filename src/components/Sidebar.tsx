@@ -32,7 +32,7 @@ export default function Sidebar() {
           <ShieldCheck size={24} />
         </div>
         <div>
-          <h1 className="font-bold text-lg leading-tight text-blue-900 tracking-tight">INGETIN</h1>
+          <h1 className="font-bold text-lg leading-tight text-blue-900 tracking-tight">TEPATWAKTU</h1>
           <p className="text-[10px] text-slate-500 font-semibold tracking-wider">LIFECYCLE ASSISTANT</p>
         </div>
       </div>

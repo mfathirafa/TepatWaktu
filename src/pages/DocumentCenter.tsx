@@ -231,7 +231,7 @@ export default function DocumentCenter() {
             alt="Profil" 
             className="w-8 h-8 rounded-full object-cover border border-gray-100 bg-[#E8E7FD]" 
           />
-          <span className="text-[#3525cd] font-extrabold text-lg tracking-wider">INGETIN</span>
+          <span className="text-[#3525cd] font-extrabold text-lg tracking-wider">TEPATWAKTU</span>
         </div>
         <Link to="/notifikasi" className="relative p-2 hover:bg-gray-50 rounded-full transition-colors">
           <Bell size={22} className="text-[#3525cd]" />

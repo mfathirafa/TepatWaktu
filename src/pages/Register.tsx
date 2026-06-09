@@ -35,12 +35,12 @@ export default function Register() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div>
-            <p className="font-bold text-indigo-700 text-base leading-none">INGETIN</p>
+            <p className="font-bold text-indigo-700 text-base leading-none">TEPATWAKTU</p>
             <p className="text-gray-400 text-[10px] font-medium">Lifecycle Assistant</p>
           </div>
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Buat Akun Baru</h1>
-        <p className="text-gray-500 text-sm">Bergabunglah dengan INGETIN untuk asisten lifecycle yang cerdas.</p>
+        <p className="text-gray-500 text-sm">Bergabunglah dengan TEPATWAKTU untuk asisten lifecycle yang cerdas.</p>
       </div>
 
       <div className="flex-1 px-6 space-y-4">

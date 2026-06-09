@@ -47,7 +47,7 @@ export default function LoginPage(): JSX.Element {
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="mb-4 animate-bounce" style={{ animationDuration: '3000ms' }}>
             <div className="w-24 h-24 rounded-[1.5rem] bg-white shadow-2xl flex items-center justify-center border border-gray-100/60 overflow-hidden relative">
-              <img src="/logo.png" alt="Ingetin Logo" className="absolute w-[180%] h-[180%] max-w-none object-contain" />
+              <img src="/logo.png" alt="TepatWaktu Logo" className="absolute w-[180%] h-[180%] max-w-none object-contain" />
             </div>
           </div>
 
@@ -65,7 +65,7 @@ export default function LoginPage(): JSX.Element {
 
         <div className="mb-6">
           <p className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest mb-1">Welcome Back</p>
-          <h2 className="text-xl font-bold text-gray-900">Login ke <span className="text-indigo-600">INGETIN</span></h2>
+          <h2 className="text-xl font-bold text-gray-900">Login ke <span className="text-indigo-600">TEPATWAKTU</span></h2>
         </div>
 
         {error && (

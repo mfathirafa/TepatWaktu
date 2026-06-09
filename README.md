@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://api.dicebear.com/7.x/shapes/svg?seed=Ingetin&backgroundColor=3525cd" alt="Ingetin Logo" width="120" height="120" style="border-radius: 24px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(53, 37, 205, 0.2);" />
+  <img src="https://api.dicebear.com/7.x/shapes/svg?seed=TepatWaktu&backgroundColor=3525cd" alt="TepatWaktu Logo" width="120" height="120" style="border-radius: 24px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(53, 37, 205, 0.2);" />
   
   # 📦 Tepat Waktu
   
@@ -19,7 +19,7 @@
 
 ## 🌟 Tentang Aplikasi
 
-**TepatWaktu** adalah aplikasi _all-in-one_ yang dirancang khusus untuk mempermudah hidup Anda dalam mengingat dan mengelola hal-hal penting yang sering terlupakan. Apakah itu batas waktu tagihan listrik bulanan, jadwal servis kendaraan, masa berlaku paspor, hingga tanggal habisnya garansi laptop kesayangan—semua dapat dilacak dan diingatkan oleh Ingetin.
+**TepatWaktu** adalah aplikasi _all-in-one_ yang dirancang khusus untuk mempermudah hidup Anda dalam mengingat dan mengelola hal-hal penting yang sering terlupakan. Apakah itu batas waktu tagihan listrik bulanan, jadwal servis kendaraan, masa berlaku paspor, hingga tanggal habisnya garansi laptop kesayangan—semua dapat dilacak dan diingatkan oleh TepatWaktu.
 
 Menggunakan pendekatan antarmuka bergaya *Glassmorphism* modern dan tata letak *Mobile-first*, aplikasi ini memastikan pengalaman pengguna yang sangat premium dan intuitif di berbagai ukuran perangkat keras.
 
@@ -62,12 +62,12 @@ Sebelum Anda memulai instalasi, pastikan Anda telah memiliki:
 
 ## 📦 Panduan Instalasi & Menjalankan Aplikasi
 
-Ikuti panduan ini langkah demi langkah untuk menjalankan Ingetin di mesin lokal Anda:
+Ikuti panduan ini langkah demi langkah untuk menjalankan TepatWaktu di mesin lokal Anda:
 
 ### 1. Kloning Repositori
 ```bash
-git clone https://github.com/username/ingetin.git
-cd ingetin
+git clone https://github.com/username/tepatwaktu.git
+cd tepatwaktu
 ```
 
 ### 2. Instalasi Dependensi
@@ -132,6 +132,6 @@ Di dalam `package.json`, kami menyediakan beberapa skrip pembantu:
 ---
 
 <div align="center">
-  Dibuat dengan ❤️ oleh <b>Tim Ingetin</b>. <br />
+  Dibuat dengan ❤️ oleh <b>Tim TepatWaktu</b>. <br />
   Hak Cipta &copy; 2026 Seluruh Hak Dilindungi.
 </div>
