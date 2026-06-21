@@ -10,6 +10,7 @@ import UpgradePremium from './pages/UpgradePremium';
 import PaymentConfirmation from './pages/PaymentConfirmation';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
+import LandingPage from './pages/LandingPage';
 
 // Mobile-wrapped protected pages
 import Dashboard from './pages/Dashboard';
@@ -43,6 +44,15 @@ function App() {
         {/* Public pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/" element={
+          user ? (
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          ) : (
+            <LandingPage />
+          )
+        } />
         {/* Protected pages */}
         <Route path="/*" element={
           <ProtectedRoute>
@@ -54,7 +64,6 @@ function App() {
               <Route path="/pembayaran-gagal" element={<PaymentFailed />} />
 
               {/* Core Features */}
-              <Route path="/" element={<Dashboard />} />
               <Route path="/tagihan" element={<ManageBills />} />
               <Route path="/tagihan/detail" element={<ReminderDetail />} />
               <Route path="/pajak" element={<ManageTax />} />

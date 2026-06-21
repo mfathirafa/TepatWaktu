@@ -318,10 +318,17 @@ export default function SettingsPage() {
   const handleSaveBasicInfo = async () => {
     if (!isDirty) return;
     try {
+      // Sanitize whatsapp number: remove any non-digits, and convert leading 0 to 62
+      let cleanedWhatsapp = whatsapp.replace(/[^0-9]/g, '');
+      if (cleanedWhatsapp.startsWith('0')) {
+        cleanedWhatsapp = '62' + cleanedWhatsapp.substring(1);
+      }
+      
       await updateProfile({
         name: name.trim(),
-        whatsapp: whatsapp.trim()
+        whatsapp: cleanedWhatsapp
       });
+      setWhatsapp(cleanedWhatsapp);
       setIsDirty(false);
     } catch (err) {
       console.error('Failed to update profile:', err);
@@ -493,7 +500,7 @@ export default function SettingsPage() {
 
         {/* WhatsApp Number */}
         <div>
-          <label className="text-[10px] font-extrabold text-gray-400 mb-1.5 block">WhatsApp Number</label>
+          <label className="text-[10px] font-extrabold text-gray-400 mb-1.5 block">Nomor WhatsApp</label>
           <div className="bg-[#EEEDFC]/40 border border-[#DCDAFF]/40 rounded-2xl px-4 py-3 flex items-center gap-3 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500/80 transition-all">
             <Phone size={16} className="text-gray-400" />
             <input 
@@ -504,7 +511,7 @@ export default function SettingsPage() {
                 setIsDirty(true);
               }}
               onBlur={handleSaveBasicInfo}
-              placeholder="+62 123 4567 890"
+              placeholder="Contoh: 6281234567890"
               className="bg-transparent border-none outline-none w-full text-xs font-extrabold text-gray-800 placeholder-gray-400"
             />
           </div>

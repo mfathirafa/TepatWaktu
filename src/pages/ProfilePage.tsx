@@ -10,6 +10,7 @@ interface Profile {
   role: string;
   subscription_tier: string;
   created_at: string;
+  whatsapp?: string | null;
 }
 
 export default function ProfilePage() {
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   
   const [editName, setEditName] = useState('');
+  const [editWhatsapp, setEditWhatsapp] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -37,7 +39,7 @@ export default function ProfilePage() {
         // 1. Ambil Profil (menggunakan maybeSingle untuk mencegah error jika data belum ada)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, name, email, role, subscription_tier, created_at')
+          .select('id, name, email, role, subscription_tier, created_at, whatsapp')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -59,6 +61,7 @@ export default function ProfilePage() {
 
         setProfile(currentProfile);
         setEditName(currentProfile.name || '');
+        setEditWhatsapp(currentProfile.whatsapp || '');
 
         // 2. Ambil Statistik Aset & Garansi (Logika Identik DashboardPage)
         const { data: assetsData } = await supabase
@@ -120,6 +123,12 @@ export default function ProfilePage() {
       setError('');
       setSuccessMessage('');
 
+      // Sanitize whatsapp: only digits, convert leading 0 to 62
+      let cleanedWhatsapp = editWhatsapp.replace(/[^0-9]/g, '');
+      if (cleanedWhatsapp.startsWith('0')) {
+        cleanedWhatsapp = '62' + cleanedWhatsapp.substring(1);
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({ 
@@ -128,7 +137,8 @@ export default function ProfilePage() {
           email: profile.email,
           role: profile.role,
           subscription_tier: profile.subscription_tier,
-          created_at: profile.created_at
+          created_at: profile.created_at,
+          whatsapp: cleanedWhatsapp || null
         });
 
       if (updateError) throw updateError;
@@ -138,7 +148,8 @@ export default function ProfilePage() {
         data: { full_name: editName }
       });
 
-      setProfile({ ...profile, name: editName });
+      setProfile({ ...profile, name: editName, whatsapp: cleanedWhatsapp || null });
+      setEditWhatsapp(cleanedWhatsapp);
       setSuccessMessage('Profil berhasil diperbarui!');
       
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -313,10 +324,27 @@ export default function ProfilePage() {
                   <p className="text-xs text-slate-400 mt-1">Email digunakan untuk login dan tidak dapat diubah.</p>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-700 tracking-wide uppercase">Nomor WhatsApp</label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="tel"
+                      value={editWhatsapp}
+                      onChange={(e) => setEditWhatsapp(e.target.value)}
+                      placeholder="Contoh: 6281234567890"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors outline-none text-slate-700"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">Format: 6281234567890 (tanpa +, tanpa spasi). Digunakan untuk pengingat garansi otomatis via WhatsApp.</p>
+                  {editWhatsapp && !editWhatsapp.replace(/[^0-9]/g, '').match(/^628\d{8,}$/) && editWhatsapp.replace(/[^0-9]/g, '').length > 5 && (
+                    <p className="text-xs text-amber-500 mt-1">⚠️ Pastikan format nomor dimulai dengan 628 (misal: 62812345...)</p>
+                  )}
+                </div>
+
                 <div className="pt-4">
                   <button 
                     type="submit" 
-                    disabled={isSaving || editName === profile?.name}
+                    disabled={isSaving || (editName === profile?.name && editWhatsapp === (profile?.whatsapp || ''))}
                     className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}

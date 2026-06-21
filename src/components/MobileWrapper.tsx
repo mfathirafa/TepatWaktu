@@ -3,11 +3,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { Plus, ArrowLeft } from 'lucide-react';
 import BottomNav from './BottomNav';
 
+import { useAuth } from '../context/AuthContext';
+
 const NO_BOTTOM_NAV = ['/login', '/register', '/konfirmasi-pembayaran', '/upgrade', '/pembayaran-berhasil', '/pembayaran-gagal', '/notifikasi', '/riwayat', '/dokumen'];
 
 export default function MobileWrapper({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const location = useLocation();
-  const hideBottomNav = NO_BOTTOM_NAV.includes(location.pathname);
+  const hideBottomNav = NO_BOTTOM_NAV.includes(location.pathname) || (location.pathname === '/' && !user);
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans sm:flex sm:justify-center sm:items-center sm:p-4">
