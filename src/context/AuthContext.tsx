@@ -24,18 +24,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchProfile(userId: string) {
     try {
-      console.log('Fetching profile for:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      if (error) {
-        console.error('Error fetching profile:', error);
-      }
       if (!error && data) setProfile(data as Profile);
-    } catch (err) {
-      console.error('Exception in fetchProfile:', err);
+    } catch {
+      // silent
     }
   }
 
@@ -44,10 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    console.log('Initializing auth session...');
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
-        console.log('Session fetched:', session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -55,13 +49,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fetchProfile(session.user.id);
         }
       })
-      .catch(err => {
-        console.error('Error fetching auth session:', err);
+      .catch(() => {
         setLoading(false);
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state change event:', _event, session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);

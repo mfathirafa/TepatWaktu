@@ -23,6 +23,7 @@ import ActivityHistory from './pages/ActivityHistory';
 import SettingsPage from './pages/SettingsPage';
 import Notifications from './pages/Notifications';
 import ReminderDetail from './pages/ReminderDetail';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   const { user, loading } = useAuth();
@@ -73,6 +74,7 @@ function App() {
               <Route path="/riwayat" element={<ActivityHistory />} />
               <Route path="/notifikasi" element={<Notifications />} />
               <Route path="/pengaturan" element={<SettingsPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </ProtectedRoute>

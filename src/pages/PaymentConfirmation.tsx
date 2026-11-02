@@ -1,9 +1,73 @@
-import { ArrowLeft, Upload } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Upload, CheckCircle, X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
 
 export default function PaymentConfirmation() {
+  const { user, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [method, setMethod] = useState('bca');
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      if (f.size > 5 * 1024 * 1024) {
+        setError('Ukuran file maksimal 5MB.');
+        return;
+      }
+      setFile(f);
+      setError(null);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!user) return;
+    if (!file) {
+      setError('Harap upload bukti pembayaran terlebih dahulu.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      // 1. Upload bukti pembayaran ke Supabase Storage
+      const ext = file.name.split('.').pop();
+      const filename = `payment-proofs/${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from('receipts')
+        .upload(filename, file, { upsert: true });
+
+      if (uploadErr) throw new Error('Gagal upload bukti: ' + uploadErr.message);
+
+      // 2. Update subscription_tier user ke 'premium'
+      const { error: updateErr } = await supabase
+        .from('profiles')
+        .update({ subscription_tier: 'premium', updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (updateErr) throw new Error('Gagal aktivasi premium: ' + updateErr.message);
+
+      // 3. Refresh profile di context
+      await refreshProfile();
+
+      // 4. Navigate ke halaman sukses dengan state
+      navigate('/pembayaran-berhasil', {
+        state: {
+          method,
+          amount: 'Rp 719.200',
+          txId: '#TW-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+        }
+      });
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan. Coba lagi.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-full bg-[#F8F9FC] pb-8">
@@ -18,7 +82,7 @@ export default function PaymentConfirmation() {
         {/* Order Card */}
         <div className="bg-indigo-700 rounded-2xl p-4 text-white relative overflow-hidden">
           <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-indigo-600/30 rounded-full" />
-          <p className="text-indigo-200 text-xs font-medium mb-1">PREMIUM ASSISTANT</p>
+          <p className="text-indigo-200 text-xs font-medium mb-1">PREMIUM TEPATWAKTU</p>
           <p className="text-white font-bold text-lg">Lifecycle PRO</p>
           <p className="text-indigo-300 text-xs mt-1">Pro Annual · 12 Bulan</p>
         </div>
@@ -26,10 +90,13 @@ export default function PaymentConfirmation() {
         {/* Method */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-sm font-bold text-gray-800 mb-3">Metode Pembayaran</p>
-          {[{ id: 'bca', label: 'Virtual Account BCA', sub: 'Otomatis Terverifikasi' }, { id: 'ewallet', label: 'E-Wallet (GoPay / OVO)', sub: 'Biaya Layanan Rp 1.000' }].map(m => (
+          {[
+            { id: 'bca', label: 'Virtual Account BCA', sub: '1234 5678 9012 3456' },
+            { id: 'ewallet', label: 'E-Wallet (GoPay / OVO)', sub: 'Biaya Layanan Rp 1.000' }
+          ].map(m => (
             <button key={m.id} onClick={() => setMethod(m.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border mb-2 last:mb-0 transition-all ${method === m.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}>
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${method === m.id ? 'border-indigo-600' : 'border-gray-300'}`}>
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${method === m.id ? 'border-indigo-600' : 'border-gray-300'}`}>
                 {method === m.id && <div className="w-2 h-2 bg-indigo-600 rounded-full" />}
               </div>
               <div className="text-left">
@@ -52,20 +119,52 @@ export default function PaymentConfirmation() {
           </div>
         </div>
 
-        {/* Upload */}
+        {/* Upload Bukti */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
-          <p className="text-sm font-bold text-gray-800 mb-3">Bukti Pembayaran</p>
-          <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center gap-2">
-            <Upload size={24} className="text-gray-400" />
-            <p className="text-sm font-medium text-gray-600">Klik atau seret file ke sini</p>
-            <p className="text-xs text-gray-400">JPG, PNG, atau PDF (Maks 5MB)</p>
+          <p className="text-sm font-bold text-gray-800 mb-3">Bukti Pembayaran <span className="text-red-500">*</span></p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.pdf"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer transition-colors ${file ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'}`}
+          >
+            {file ? (
+              <>
+                <CheckCircle size={24} className="text-emerald-500" />
+                <p className="text-sm font-medium text-emerald-700">{file.name}</p>
+                <p className="text-xs text-emerald-500">{(file.size / 1024).toFixed(0)} KB · Klik untuk ganti</p>
+              </>
+            ) : (
+              <>
+                <Upload size={24} className="text-gray-400" />
+                <p className="text-sm font-medium text-gray-600">Klik untuk pilih file</p>
+                <p className="text-xs text-gray-400">JPG, PNG, atau PDF (Maks 5MB)</p>
+              </>
+            )}
           </div>
         </div>
 
-        <Link to="/pembayaran-berhasil" className="block w-full bg-indigo-700 text-white font-bold py-3.5 rounded-xl text-center shadow-lg shadow-indigo-700/25">
-          🔒 Konfirmasi & Aktifkan
-        </Link>
-        <p className="text-center text-[10px] text-gray-400">Pembayaran aman & terenkripsi oleh Stripe Secure</p>
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3">
+            <X size={14} className="text-red-500 shrink-0" />
+            <p className="text-xs text-red-600 font-medium">{error}</p>
+          </div>
+        )}
+
+        <button
+          onClick={handleConfirm}
+          disabled={loading}
+          className="block w-full bg-indigo-700 hover:bg-indigo-800 disabled:bg-indigo-400 text-white font-bold py-3.5 rounded-xl text-center shadow-lg shadow-indigo-700/25 transition-all"
+        >
+          {loading ? 'Memproses...' : '🔒 Konfirmasi & Aktifkan Premium'}
+        </button>
+        <p className="text-center text-[10px] text-gray-400">Data pembayaran dienkripsi dan aman</p>
       </div>
     </div>
   );

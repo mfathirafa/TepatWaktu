@@ -7,11 +7,11 @@ export default function BottomNav() {
   const { unreadCount } = useNotifications();
 
   const navItems = [
-    { path: '/', label: 'Beranda', icon: Home },
-    { path: '/pajak', label: 'Pajak', icon: Scale },
-    { path: '/tagihan', label: 'Tagihan', icon: Wallet },
-    { path: '/servis', label: 'Servis', icon: Wrench },
-    { path: '/pengaturan', label: 'Profil', icon: User },
+    { path: '/', label: 'Beranda', icon: Home, badge: 0 },
+    { path: '/pajak', label: 'Pajak', icon: Scale, badge: 0 },
+    { path: '/tagihan', label: 'Tagihan', icon: Wallet, badge: 0 },
+    { path: '/servis', label: 'Servis', icon: Wrench, badge: 0 },
+    { path: '/pengaturan', label: 'Profil', icon: User, badge: unreadCount },
   ];
 
   return (

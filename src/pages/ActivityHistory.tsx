@@ -150,11 +150,24 @@ export default function ActivityHistory() {
             ASSET HEALTH
           </span>
           <h2 className="text-[34px] font-extrabold text-[#3525cd] mt-2">
-            94%
+            {(() => {
+              const total = bills.length + services.length;
+              if (total === 0) return '100%';
+              const paid = bills.filter(b => b.status === 'paid').length;
+              const serviced = services.filter(s => s.last_service_date).length;
+              const pct = Math.round(((paid + serviced) / total) * 100);
+              return `${pct}%`;
+            })()}
           </h2>
 
           <div className="w-full bg-[#F3F4F6] h-2.5 rounded-full overflow-hidden mt-6">
-            <div className="bg-[#10B981] h-full rounded-full" style={{ width: '94%' }} />
+            <div className="bg-[#10B981] h-full rounded-full" style={{ width: (() => {
+              const total = bills.length + services.length;
+              if (total === 0) return '100%';
+              const paid = bills.filter(b => b.status === 'paid').length;
+              const serviced = services.filter(s => s.last_service_date).length;
+              return `${Math.round(((paid + serviced) / total) * 100)}%`;
+            })() }} />
           </div>
         </div>
 
@@ -172,7 +185,19 @@ export default function ActivityHistory() {
               {getThisMonthCount()}
             </h3>
             <span className="text-[9px] font-extrabold text-emerald-600 mt-2 flex items-center gap-0.5 leading-none">
-              ↑ 2 from last month
+              {(() => {
+                const prevMonth = new Date();
+                prevMonth.setMonth(prevMonth.getMonth() - 1);
+                const lastMonthCount = bills.filter(b => {
+                  if (b.status !== 'paid') return false;
+                  const d = new Date(b.updated_at);
+                  return d.getMonth() === prevMonth.getMonth() && d.getFullYear() === prevMonth.getFullYear();
+                }).length;
+                const diff = getThisMonthCount() - lastMonthCount;
+                if (diff > 0) return `↑ ${diff} dari bulan lalu`;
+                if (diff < 0) return `↓ ${Math.abs(diff)} dari bulan lalu`;
+                return '= sama dengan bulan lalu';
+              })()}
             </span>
           </div>
 

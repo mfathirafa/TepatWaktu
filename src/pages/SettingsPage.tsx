@@ -14,7 +14,8 @@ import {
   Pencil,
   Clock,
   FileText,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../hooks/useProfile';
@@ -22,9 +23,11 @@ import { useNotifications } from '../hooks/useNotifications';
 import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import AdBanner from '../components/AdBanner';
+import { useAuth as useAuthHook } from '../hooks/useAuth';
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
+  const { role } = useAuthHook();
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile();
   const { unreadCount } = useNotifications();
   const [seeding, setSeeding] = useState(false);
@@ -617,13 +620,49 @@ export default function SettingsPage() {
         </Link>
       </div>
 
+      {/* Section: ADMIN (only visible for admin role) */}
+      {role === 'admin' && (
+        <>
+          <span className="text-[10px] font-extrabold text-indigo-500 tracking-wider px-5 mt-7 mb-3 block shrink-0">
+            ADMIN
+          </span>
+          <div className="mx-5 bg-indigo-50 rounded-[30px] border border-indigo-100 shadow-sm overflow-hidden shrink-0">
+            <Link 
+              to="/admin"
+              className="flex items-center justify-between w-full p-4 hover:bg-indigo-100/50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shrink-0">
+                  <ShieldCheck size={18} className="stroke-[2]" />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-indigo-900 text-left block">Admin Panel</span>
+                  <span className="text-[10px] text-indigo-500 font-bold">Kelola pengguna &amp; analitik</span>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-indigo-400" />
+            </Link>
+          </div>
+        </>
+      )}
+
       {/* Section: SECURITY */}
       <span className="text-[10px] font-extrabold text-gray-400 tracking-wider px-5 mt-7 mb-3 block shrink-0">
         SECURITY
       </span>
       <div className="mx-5 bg-white rounded-[30px] border border-gray-100 p-4.5 shadow-sm shrink-0">
         <button 
-          onClick={() => alert('Email reset kata sandi telah dikirimkan ke kotak masuk Anda. Silakan periksa email Anda.')}
+          onClick={async () => {
+            if (!user?.email) return;
+            const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+              redirectTo: window.location.origin + '/reset-password',
+            });
+            if (error) {
+              alert('Gagal mengirim email reset: ' + error.message);
+            } else {
+              alert('Email reset kata sandi telah dikirimkan ke ' + user.email + '. Silakan periksa kotak masuk Anda.');
+            }
+          }}
           className="flex items-center justify-between w-full hover:bg-gray-50/50 rounded-2xl transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-3">
