@@ -5,19 +5,20 @@ import BottomNav from './BottomNav';
 
 import { useAuth } from '../context/AuthContext';
 
-const NO_BOTTOM_NAV = ['/login', '/register', '/konfirmasi-pembayaran', '/upgrade', '/pembayaran-berhasil', '/pembayaran-gagal', '/notifikasi', '/riwayat', '/dokumen'];
+const NO_BOTTOM_NAV = ['/login', '/register', '/konfirmasi-pembayaran', '/upgrade', '/pembayaran-berhasil', '/pembayaran-gagal', '/notifikasi', '/riwayat', '/dokumen', '/lupa-password', '/reset-password'];
 
 export default function MobileWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const location = useLocation();
   const hideBottomNav = NO_BOTTOM_NAV.includes(location.pathname) || (location.pathname === '/' && !user);
+  const isLoginPage = location.pathname === '/login';
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans sm:flex sm:justify-center sm:items-center sm:p-4">
       {/* Phone Shell */}
       <div className="w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] bg-[#F8F9FC] relative flex flex-col sm:rounded-[40px] sm:shadow-2xl sm:overflow-hidden sm:border sm:border-gray-200">
-        {/* Scrollable Content */}
-        <div className={`flex-1 overflow-y-auto no-scrollbar relative ${!hideBottomNav ? 'pb-28' : ''}`}>
+        {/* Scrollable Content (No scroll on login page) */}
+        <div className={`flex-1 ${isLoginPage ? 'overflow-hidden h-full flex flex-col' : 'overflow-y-auto no-scrollbar'} relative ${!hideBottomNav ? 'pb-28' : ''}`}>
           {children}
         </div>
 
