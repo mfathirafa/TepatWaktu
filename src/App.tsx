@@ -11,6 +11,8 @@ import PaymentConfirmation from './pages/PaymentConfirmation';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
 import LandingPage from './pages/LandingPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Mobile-wrapped protected pages
 import Dashboard from './pages/Dashboard';
@@ -45,6 +47,8 @@ function App() {
         {/* Public pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/lupa-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/" element={
           user ? (
             <ProtectedRoute>

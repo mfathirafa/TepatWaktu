@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabase';
 
 export default function LoginPage(): JSX.Element {
   const { signIn } = useAuth();
@@ -13,6 +14,7 @@ export default function LoginPage(): JSX.Element {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,37 +23,64 @@ export default function LoginPage(): JSX.Element {
     setLoading(true);
 
     try {
-      // Pastikan signIn menerima (email, password, remember) dan mengembalikan { error?: any, user?: any }
-      const { error: err } = await signIn(email.trim(), password, remember);
+      const { error: err } = await signIn(email.trim(), password);
       setLoading(false);
 
       if (err) {
-        setError(typeof err === 'string' ? err : 'Email atau password salah. Silakan coba lagi.');
+        setError('Email atau password salah. Silakan coba lagi.');
         return;
       }
 
       navigate('/', { replace: true });
-    } catch (err) {
+    } catch {
       setLoading(false);
       setError('Terjadi kesalahan jaringan. Silakan coba lagi.');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setSocialLoading('google');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    if (error) {
+      setError('Gagal login dengan Google. Coba lagi.');
+      setSocialLoading(null);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    setSocialLoading('facebook');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    if (error) {
+      setError('Gagal login dengan Facebook. Coba lagi.');
+      setSocialLoading(null);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#fcf8ff] to-[#f0ecf9]">
       {/* Top Illustration */}
-      <div className="relative h-[280px] w-full flex flex-col items-center justify-center p-6 overflow-hidden">
+      <div className="relative h-[220px] w-full flex flex-col items-center justify-center p-6 overflow-hidden shrink-0">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-200 opacity-40 rounded-full blur-3xl" />
         <div className="absolute top-1/2 -left-8 w-32 h-32 bg-violet-200 opacity-30 rounded-full blur-2xl" />
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="mb-4 animate-bounce" style={{ animationDuration: '3000ms' }}>
-            <div className="w-24 h-24 rounded-[1.5rem] bg-white shadow-2xl flex items-center justify-center border border-gray-100/60 overflow-hidden relative">
+          <div className="mb-3 animate-bounce" style={{ animationDuration: '3000ms' }}>
+            <div className="w-20 h-20 rounded-[1.5rem] bg-white shadow-2xl flex items-center justify-center border border-gray-100/60 overflow-hidden relative">
               <img src="/logo.png" alt="TepatWaktu Logo" className="absolute w-[180%] h-[180%] max-w-none object-contain" />
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight">
+          <h1 className="text-xl font-bold text-gray-900 leading-tight tracking-tight">
             Your life, organized
             <br />
             and perfectly timed.
@@ -60,10 +89,10 @@ export default function LoginPage(): JSX.Element {
       </div>
 
       {/* Bottom Form */}
-      <div className="flex-1 bg-white rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] px-6 pt-8 pb-8 flex flex-col">
-        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
+      <div className="flex-1 bg-white rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] px-6 pt-6 pb-6 flex flex-col overflow-y-auto">
+        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5" />
 
-        <div className="mb-6">
+        <div className="mb-5">
           <p className="text-[11px] font-semibold text-indigo-600 uppercase tracking-widest mb-1">Welcome Back</p>
           <h2 className="text-xl font-bold text-gray-900">Login ke <span className="text-indigo-600">TEPATWAKTU</span></h2>
         </div>
@@ -75,12 +104,12 @@ export default function LoginPage(): JSX.Element {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 flex-1">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Email */}
           <div className="space-y-1.5">
             <label htmlFor="email" className="text-[13px] font-semibold text-gray-600">Email</label>
             <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
               <input
                 id="email"
                 name="email"
@@ -91,7 +120,7 @@ export default function LoginPage(): JSX.Element {
                 required
                 autoComplete="email"
                 aria-label="Email"
-                className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-gray-800 placeholder:text-gray-400"
+                className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-2xl text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-gray-800 placeholder:text-gray-400 outline-none"
               />
             </div>
           </div>
@@ -100,11 +129,13 @@ export default function LoginPage(): JSX.Element {
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
               <label htmlFor="password" className="text-[13px] font-semibold text-gray-600">Password</label>
-              <Link to="#" className="text-[12px] font-semibold text-indigo-600 hover:underline">Lupa Password?</Link>
+              <Link to="/lupa-password" className="text-[12px] font-semibold text-indigo-600 hover:underline">
+                Lupa Password?
+              </Link>
             </div>
 
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
               <input
                 id="password"
                 name="password"
@@ -115,7 +146,7 @@ export default function LoginPage(): JSX.Element {
                 required
                 autoComplete="current-password"
                 aria-label="Password"
-                className="w-full pl-12 pr-12 py-3.5 border border-gray-200 rounded-2xl text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-gray-800"
+                className="w-full pl-11 pr-12 py-3 border border-gray-200 rounded-2xl text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-gray-800 outline-none"
               />
               <button
                 type="button"
@@ -124,7 +155,7 @@ export default function LoginPage(): JSX.Element {
                 aria-pressed={showPassword}
                 aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
@@ -145,7 +176,7 @@ export default function LoginPage(): JSX.Element {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 disabled:opacity-70 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 disabled:opacity-70 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2"
           >
             {loading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
             {loading ? 'Memproses...' : (
@@ -163,25 +194,44 @@ export default function LoginPage(): JSX.Element {
             <div className="flex-grow border-t border-gray-200" />
           </div>
 
-          {/* Social buttons (placeholder) */}
+          {/* Social buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button type="button" className="flex items-center justify-center gap-2.5 border border-gray-200 rounded-2xl py-3 bg-white hover:bg-gray-50">
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={socialLoading !== null}
+              className="flex items-center justify-center gap-2.5 border border-gray-200 rounded-2xl py-3 bg-white hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-60"
+            >
+              {socialLoading === 'google' ? (
+                <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+              ) : (
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+              )}
               <span className="text-sm font-semibold text-gray-700">Google</span>
             </button>
-            <button type="button" className="flex items-center justify-center gap-2.5 border border-gray-200 rounded-2xl py-3 bg-white hover:bg-gray-50">
-              <div className="w-5 h-5 bg-[#1877F2] rounded-full flex items-center justify-center">
-                <span className="text-white text-[11px] font-bold font-serif">f</span>
-              </div>
+            <button
+              type="button"
+              onClick={handleFacebookLogin}
+              disabled={socialLoading !== null}
+              className="flex items-center justify-center gap-2.5 border border-gray-200 rounded-2xl py-3 bg-white hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-60"
+            >
+              {socialLoading === 'facebook' ? (
+                <span className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+              ) : (
+                <div className="w-5 h-5 bg-[#1877F2] rounded-full flex items-center justify-center">
+                  <span className="text-white text-[11px] font-bold font-serif">f</span>
+                </div>
+              )}
               <span className="text-sm font-semibold text-gray-700">Facebook</span>
             </button>
           </div>
-        </form>
 
-        <p className="text-center text-[13px] text-gray-500 mt-6">
-          Belum punya akun?{' '}
-          <Link to="/register" className="text-indigo-600 font-bold hover:underline">Daftar Sekarang</Link>
-        </p>
+          {/* Register Link — right below social buttons, no scroll needed */}
+          <p className="text-center text-[13px] text-gray-500 pt-1">
+            Belum punya akun?{' '}
+            <Link to="/register" className="text-indigo-600 font-bold hover:underline">Daftar Sekarang</Link>
+          </p>
+        </form>
       </div>
     </div>
   );
