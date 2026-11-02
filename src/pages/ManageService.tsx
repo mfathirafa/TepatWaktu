@@ -18,6 +18,8 @@ import { useServices } from '../hooks/useServices';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import AdBanner from '../components/AdBanner';
+import { triggerAdAfterAction } from '../components/AdModal';
+import { openWhatsAppReminder } from '../lib/whatsappReminder';
 
 function getDaysLeft(dateStr: string) {
   if (!dateStr) return 999;
@@ -154,6 +156,7 @@ export default function ManageService() {
         await updateService(selectedService.id, payload);
       } else {
         await addService(payload);
+        triggerAdAfterAction(`Jadwal servis "${formName}" berhasil ditambahkan!`);
       }
       setIsModalOpen(false);
     } catch (err) {
@@ -435,7 +438,7 @@ export default function ManageService() {
 
       {/* Add / Edit Form Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-50 flex items-end sm:items-center sm:justify-center p-0 sm:p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-[80] flex items-end sm:items-center sm:justify-center p-0 sm:p-4 animate-fade-in">
           {/* Backdrop Closer */}
           <div className="absolute inset-0" onClick={() => setIsModalOpen(false)} />
 

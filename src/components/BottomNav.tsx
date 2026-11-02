@@ -32,11 +32,11 @@ export default function BottomNav() {
                 className={`transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400'}`}
                 strokeWidth={isActive ? 2.5 : 2}
               />
-              {item.badge && item.badge > 0 && (
+              {Number(item.badge) > 0 ? (
                 <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold border-2 border-white ${isActive ? 'bg-white text-indigo-600' : 'bg-rose-500 text-white'}`}>
                   {item.badge > 9 ? '9+' : item.badge}
                 </span>
-              )}
+              ) : null}
             </div>
             <span className={`text-[10px] font-bold leading-none transition-colors duration-300 ${isActive ? 'text-indigo-700' : 'text-gray-400'}`}>
               {item.label}

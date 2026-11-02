@@ -2,7 +2,7 @@ import { useBills } from '../hooks/useBills';
 import { useLegalDocs } from '../hooks/useLegalDocs';
 import { useServices } from '../hooks/useServices';
 import { useAuth } from '../context/AuthContext';
-import { Bell, ChevronDown, ChevronRight, FileText, Calendar, AlertTriangle, ClipboardList, Car, Trash2, Wrench, Receipt, CheckCircle, Clock } from 'lucide-react';
+import { Bell, ChevronDown, ChevronRight, FileText, Calendar, AlertTriangle, ClipboardList, Car, Trash2, Wrench, Receipt, CheckCircle, Clock, ShieldCheck, Scale, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import AdBanner from '../components/AdBanner';
@@ -232,6 +232,49 @@ export default function Dashboard() {
             </p>
             <p className="text-2xl font-extrabold text-gray-950 mt-1">{completedReminders}</p>
           </div>
+        </Link>
+      </div>
+
+      {/* 4 Pilar Fitur Utama TepatWaktu */}
+      <div className="grid grid-cols-4 gap-2 px-5 mt-4">
+        <Link 
+          to="/tagihan" 
+          className="bg-white hover:bg-indigo-50/50 border border-gray-100 rounded-2xl p-2.5 flex flex-col items-center gap-1.5 shadow-xs hover:scale-105 transition-all text-center group cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+            <Wallet size={18} />
+          </div>
+          <span className="text-[10px] font-extrabold text-gray-700 leading-tight">Tagihan</span>
+        </Link>
+
+        <Link 
+          to="/pajak" 
+          className="bg-white hover:bg-amber-50/50 border border-gray-100 rounded-2xl p-2.5 flex flex-col items-center gap-1.5 shadow-xs hover:scale-105 transition-all text-center group cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+            <Scale size={18} />
+          </div>
+          <span className="text-[10px] font-extrabold text-gray-700 leading-tight">Pajak</span>
+        </Link>
+
+        <Link 
+          to="/servis" 
+          className="bg-white hover:bg-blue-50/50 border border-gray-100 rounded-2xl p-2.5 flex flex-col items-center gap-1.5 shadow-xs hover:scale-105 transition-all text-center group cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <Wrench size={18} />
+          </div>
+          <span className="text-[10px] font-extrabold text-gray-700 leading-tight">Servis</span>
+        </Link>
+
+        <Link 
+          to="/garansi" 
+          className="bg-white hover:bg-emerald-50/50 border border-gray-100 rounded-2xl p-2.5 flex flex-col items-center gap-1.5 shadow-xs hover:scale-105 transition-all text-center group cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <ShieldCheck size={18} />
+          </div>
+          <span className="text-[10px] font-extrabold text-gray-700 leading-tight">Garansi</span>
         </Link>
       </div>
 

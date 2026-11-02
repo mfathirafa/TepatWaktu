@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Plus, ArrowLeft } from 'lucide-react';
 import BottomNav from './BottomNav';
+import AdModal from './AdModal';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -57,6 +58,9 @@ export default function MobileWrapper({ children }: { children: React.ReactNode 
 
         {/* Bottom Nav */}
         {!hideBottomNav && <BottomNav />}
+
+        {/* Universal Interstitial Ad Modal for Free Tier Users */}
+        <AdModal />
 
         {/* Floating Back Button for sub-pages without bottom nav */}
         {hideBottomNav && (location.pathname === '/notifikasi' || location.pathname === '/riwayat' || location.pathname === '/dokumen') && (

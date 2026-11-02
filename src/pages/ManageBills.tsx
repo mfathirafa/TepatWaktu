@@ -21,6 +21,8 @@ import { useBills } from '../hooks/useBills';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import AdBanner from '../components/AdBanner';
+import { triggerAdAfterAction } from '../components/AdModal';
+import { openWhatsAppReminder } from '../lib/whatsappReminder';
 
 function getDaysLeft(dateStr: string) {
   if (!dateStr) return 999;
@@ -173,6 +175,7 @@ export default function ManageBills() {
         await updateBill(selectedBill.id, payload);
       } else {
         await addBill(payload);
+        triggerAdAfterAction(`Tagihan "${formName}" berhasil ditambahkan!`);
       }
       setIsModalOpen(false);
     } catch (err) {
@@ -466,7 +469,7 @@ export default function ManageBills() {
 
       {/* Add / Edit Form Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-50 flex items-end sm:items-center sm:justify-center p-0 sm:p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-[80] flex items-end sm:items-center sm:justify-center p-0 sm:p-4 animate-fade-in">
           {/* Backdrop Closer */}
           <div className="absolute inset-0" onClick={() => setIsModalOpen(false)} />
 
@@ -580,22 +583,46 @@ export default function ManageBills() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-3 shrink-0">
+              <div className="space-y-2 pt-2 shrink-0">
                 {selectedBill && (
                   <button
                     type="button"
-                    onClick={handleDelete}
-                    className="flex-1 border border-red-200 text-red-600 hover:bg-red-50 font-bold py-3 rounded-2xl text-sm transition-all"
+                    onClick={() => {
+                      const days = getDaysLeft(selectedBill.due_date);
+                      openWhatsAppReminder({
+                        phone: profile?.whatsapp,
+                        userName: profile?.name || user?.user_metadata?.full_name || 'Pelanggan TepatWaktu',
+                        itemTitle: selectedBill.name,
+                        category: 'tagihan',
+                        dueDate: formatDate(selectedBill.due_date),
+                        daysLeft: days,
+                        amount: selectedBill.amount,
+                        notes: selectedBill.notes
+                      });
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-extrabold text-xs border border-emerald-200 transition-all cursor-pointer"
                   >
-                    Hapus
+                    <span>💬 Kirim Pengingat WhatsApp</span>
                   </button>
                 )}
-                <button
-                  type="submit"
-                  className="flex-[2] bg-indigo-600 hover:bg-[#2e1ebd] text-white font-bold py-3 rounded-2xl text-sm transition-all shadow-md shadow-indigo-600/20"
-                >
-                  Simpan
-                </button>
+
+                <div className="flex gap-3">
+                  {selectedBill && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="flex-1 border border-red-200 text-red-600 hover:bg-red-50 font-bold py-3 rounded-2xl text-sm transition-all cursor-pointer"
+                    >
+                      Hapus
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="flex-[2] bg-indigo-600 hover:bg-[#2e1ebd] text-white font-bold py-3 rounded-2xl text-sm transition-all shadow-md shadow-indigo-600/20 cursor-pointer"
+                  >
+                    Simpan
+                  </button>
+                </div>
               </div>
             </form>
           </div>
